@@ -1,0 +1,63 @@
+# 环境配置与编译问题处理记录
+
+## 1. PowerShell 任务启动弹窗/闪退问题
+
+**现象**  
+在 VS Code 中运行 `Build dji_c` 任务时，终端闪退，或弹出 Windows 的“选择打开方式”对话框，无法正常启动构建流程。
+
+**根因分析**  
+系统 `PATH` 中某个目录下存在一个空的 `powershell.exe` 占位（或损坏的链接），且该目录排在真正的 PowerShell 目录前面。当 VS Code 任务管理器使用短名 `"powershell"` 时，系统优先定位到该空目录，导致无法执行真正的 `powershell.exe`。
+
+**排查过程**  
+1. 使用 `where.exe powershell` 查看系统定位到的 `powershell.exe` 路径，发现指向一个不存在的空目录。
+2. 检查系统环境变量 `PATH`，确认该空目录排在实际 PowerShell 目录（`C:\Windows\System32\WindowsPowerShell\v1.0`）之前。
+3. 确认该空目录为无效路径。
+
+**解决方案**  
+从系统 `PATH` 中移除该无效的空目录，或直接删除该目录。系统恢复使用真正的 `powershell.exe`。**未修改** `tasks.json` 中的命令路径。
+
+## 2. build 目录误删后的重新配置
+
+**现象**  
+修改 `PATH` 或工具链文件后，`compile_commands.json` 仍指向旧编译器路径。删除 `build` 目录后，编译报错，需要重新生成构建系统。
+
+**根因分析**  
+CMake 首次配置时将编译器绝对路径写入 `CMakeCache.txt`，后续配置直接复用缓存，不会因 `PATH` 变化而更新。删除 `build` 目录可强制清除缓存，使 CMake 重新探测当前环境。
+
+**操作**  
+
+1. 删除 `build` 目录。
+2. 调整系统 `PATH` 或工具链配置。
+3.  正常task run
+   
+
+## 3. cmake/stm32cubemx 目录误删后的重新生成与代码差异
+
+**现象**  
+误删 `cmake/stm32cubemx/` 目录后，编译报链接错误，例如：
+
+- `undefined reference to 'tx_app_rt_pool'`
+- 中断服务函数重复定义或缺失
+- IWDG 初始化相关错误
+
+**根因分析**  
+`cmake/stm32cubemx/` 目录存放 STM32CubeMX 自动生成的硬件初始化代码。误删后需重新生成，但重新生成后的代码与原有代码存在差异，导致业务代码链接失败。
+
+**操作**  
+
+1. 打开工程目录下的 `.ioc` 文件（STM32CubeMX 工程文件）。
+2. 在 STM32CubeMX 中点击 **Generate Code**，重新生成 `cmake/stm32cubemx/` 目录下的所有代码文件。
+
+**重新生成后的代码差异（对比原代码）**：
+
+| 文件 | 差异点 | 原代码 | 新代码 | 影响 |
+|------|--------|--------|--------|------|
+| `app_azure_rtos.c` | `tx_app_rt_pool` 变量 | `static TX_RT_POOL tx_app_rt_pool;` | 去掉 `static`，变为全局定义 | 其他文件引用该变量时需通过 `extern` 声明 |
+| `main.c` | IWDG 初始化调用 | 存在 `MX_IWDG_Init();` | 该调用被移除 | 若需启用 IWDG 需手动添加 |
+| `stm32f4xx_it.c` | `OTG_FS_IRQHandler` 中断函数 | 存在函数体 | 该函数被移除 | 转而使用 CherryUSB 的中断处理方式 |
+
+**适配方案**：
+
+- **`tx_app_rt_pool`**：在 `app_azure_rtos.c` 中保留不带 `static` 的定义，在 `main.c` 或其他引用处添加 `extern TX_RT_POOL tx_app_rt_pool;` 声明。
+- **IWDG 初始化**：若需启用，在 `main.c` 的硬件初始化部分手动添加 `MX_IWDG_Init();`。
+- **OTG_FS 中断**：按 CherryUSB 规范处理 USB 中断，移除原有直接处理逻辑。
