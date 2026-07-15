@@ -85,13 +85,14 @@ add_subdirectory(../../CMSIS-DSP ...)
 | `add_subdirectory`  | 指向的 CMakeLists.txt                                            |
 | ------------------- | ------------------------------------------------------------- |
 | `cmake/stm32cubemx` | [[02_code_twin/board/dji_c/cmake/stm32cubemx/CMakeLists-txt]] |
-| `../../threadx`     | 第三方库，暂不展开                                                    |
+| `../../threadx`     | 第三方库，暂不展开                                                     |
 | `../../utils`       | [[02_code_twin/utils/CMakeLists-txt]]                         |
 | `../../board/bsp`   | [[02_code_twin/board/bsp/CMakeLists-txt]]                     |
 | `../../robot`       | [[02_code_twin/robot/CMakeLists-txt]]                         |
 | `../../modules`     | [[02_code_twin/modules/CMakeLists-txt]]                       |
 | `../../apps`        | [[02_code_twin/apps/CMakeLists-txt]]                          |
-| `../../CMSIS-DSP`   | 第三方库，暂不展开                                                    |
+| `../../CMSIS-DSP`   | 第三方库，暂不展开                                                     |
+| `../../CherryUSB`   | 第三方库，暂不展开                                                     |
 
 
 ### 最终链接

@@ -40,10 +40,17 @@ endif()
 ### 自动收集头文件路径
 
 ```cmake
+# 收集所有子目录作为头文件包含路径
+# 把 apps/<robot>/ 根目录加入，方便板型间共享 <robot>_def.h 等头文件
 set(_robot_includes "")
 if(EXISTS ${_robot_base_dir})
     list(APPEND _robot_includes ${_robot_base_dir})
 endif()
+```
+
+先把 `apps/infantry3/` 根目录加入头文件路径。这样不同板型（single_board / gimbal_board）之间可以共享 `infantry3_def.h` 这类公共头文件。
+
+```cmake
 if(EXISTS ${_robot_board_dir})
     file(GLOB_RECURSE _robot_headers ${_robot_board_dir}/*.h)
     list(APPEND _robot_includes ${_robot_board_dir})
@@ -55,7 +62,12 @@ if(EXISTS ${_robot_board_dir})
 endif()
 ```
 
-遍历所有 `.h` 文件，提取每个文件所在目录加入头文件搜索路径，最后去重。
+- `file(GLOB_RECURSE)` → [[01_extracted/cmake-basic-syntax#file(GLOB_RECURSE) - 递归扫描文件]]
+- `foreach` → [[01_extracted/cmake-basic-syntax#foreach - 循环]]
+- `list` → [[01_extracted/cmake-basic-syntax#list - 列表操作]]
+- `get_filename_component` → [[01_extracted/cmake-basic-syntax#get_filename_component - 提取路径组件]]
+
+再扫描 `single_board/` 下所有 `.h` 文件，提取每个文件所在目录加入头文件路径，最后 `list(REMOVE_DUPLICATES)` 去重。这样源码里 `#include "chassis.h"` 就能自动找到 `single_board/chassis/chassis.h` 所在的目录。
 
 ### 建库
 

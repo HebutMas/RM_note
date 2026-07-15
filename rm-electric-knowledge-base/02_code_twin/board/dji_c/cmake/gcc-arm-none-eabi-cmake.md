@@ -44,11 +44,11 @@ set(TARGET_FLAGS "-mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${TARGET_FLAGS}")
 ```
 
-| 标志 | 含义 |
-|------|------|
-| `-mcpu=cortex-m4` | 目标核心：Cortex-M4（C板 STM32F407IG） |
-| `-mfpu=fpv4-sp-d16` | FPU 类型：单精度浮点单元 |
-| `-mfloat-abi=hard` | 硬件浮点 ABI：浮点参数直接通过 FPU 寄存器传递，不走软件模拟 |
+| 标志                  | 含义                                 |
+| ------------------- | ---------------------------------- |
+| `-mcpu=cortex-m4`   | 目标核心：Cortex-M4（C板 STM32F407IG）     |
+| `-mfpu=fpv4-sp-d16` | FPU 类型：单精度浮点单元                     |
+| `-mfloat-abi=hard`  | 硬件浮点 ABI：浮点参数直接通过 FPU 寄存器传递，不走软件模拟 |
 
 > 对比 damiao_h7 板：`-mcpu=cortex-m7 -mfpu=fpv5-d16`（双精度 FPU）。两块板的工具链差异仅在此处。
 
