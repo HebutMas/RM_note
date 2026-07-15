@@ -1,7 +1,15 @@
-rm-electric-knowledge-base/00_raw/hardware/
+# 不上传的原始资料
 rm-electric-knowledge-base/00_raw/reference-code/
 rm-electric-knowledge-base/00_raw/reference-note/
-rm-electric-knowledge-base/00_raw/RM_note/
-rm-electric-knowledge-base/00_raw/referee/
-rm-electric-knowledge-base/00_raw/motors/
 rm-electric-knowledge-base/00_raw/Obsidian-1.12.7.exe
+
+# 未审核的电机资料
+rm-electric-knowledge-base/00_raw/motors/ZDT_STEPMOTOR/
+
+# 垃圾文件
+rm-electric-knowledge-base/00_raw/垃圾桶/
+
+# Obsidian 动态文件 (每次打开都变)
+rm-electric-knowledge-base/.obsidian/workspace.json
+rm-electric-knowledge-base/.obsidian/graph.json
+rm-electric-knowledge-base/.obsidian/plugins/
