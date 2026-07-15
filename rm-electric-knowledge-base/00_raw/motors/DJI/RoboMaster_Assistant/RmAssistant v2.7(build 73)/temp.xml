@@ -1,0 +1,10 @@
+<dji>
+    <device id="wm004tt">
+        <firmware formal="00.00.0045">
+            <release version="00.00.0045" antirollback="0" antirollback_ext="cn:0" enforce="0" enforce_ext="cn:0" enforce_time="2022-12-09T07:21:33+00:00" from="2022/12/09" expire="2023/12/09">
+                <module id="2401" version="01.00.00.52" type="" group="" size="1130976" md5_unsign="8f720c4fd97463e9857c8c43f7b65f3d" md5="bc5f5494e239b21b74c945210abd8429">wm004tt_2401_v01.00.00.52_20221202.pro.fw.sig</module>
+                <module id="2402" version="01.00.00.28" type="" group="" size="1300192" md5_unsign="e8cb152f561c61ddd89f5b14ee28220e" md5="36b5cc68124f8a1479c79217c1bcc20a">wm004tt_2402_v01.00.00.28_20221209.pro.fw.sig</module>
+            </release>
+        </firmware>
+    </device>
+</dji>

@@ -1,0 +1,13 @@
+System.IO.IOException
+Unable to set the serial port state
+   在 RJCP.IO.Ports.Native.Windows.CommState.SetCommState() 位置 c:\Users\jcurl\Documents\Programming\HELIOS\serialportstream\code\Native\Windows\CommState.cs:行号 67
+   在 RJCP.IO.Ports.Native.WinNativeSerial.SetPortSettings() 位置 c:\Users\jcurl\Documents\Programming\HELIOS\serialportstream\code\Native\WinNativeSerial.cs:行号 778
+   在 RJCP.IO.Ports.Native.WinNativeSerial.set_BaudRate(Int32 value) 位置 c:\Users\jcurl\Documents\Programming\HELIOS\serialportstream\code\Native\WinNativeSerial.cs:行号 184
+   在 SerialPortService.ChangeBaudRateAndRequest() 位置 D:\SoftProject\BitBucket\rm_assistant_vs2017\RmAssistant\Service\SerialPortService.cs:行号 819
+   在 SerialPortService.Timer_BaudRateChangeAndReq() 位置 D:\SoftProject\BitBucket\rm_assistant_vs2017\RmAssistant\Service\SerialPortService.cs:行号 130
+   在 SerialPortService.update() 位置 D:\SoftProject\BitBucket\rm_assistant_vs2017\RmAssistant\Service\SerialPortService.cs:行号 102
+   在 BaseService.Run() 位置 D:\SoftProject\BitBucket\rm_assistant_vs2017\RmAssistant\Service\BaseService.cs:行号 126
+   在 System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state, Boolean preserveSyncCtx)
+   在 System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state, Boolean preserveSyncCtx)
+   在 System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state)
+   在 System.Threading.ThreadHelper.ThreadStart()
