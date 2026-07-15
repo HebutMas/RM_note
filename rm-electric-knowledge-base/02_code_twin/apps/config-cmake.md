@@ -59,7 +59,7 @@ foreach(_m ${_enabled})
 endforeach()
 ```
 
-- `MODULE_INFANTY3` → [[02_code_twin/apps/infantry3-robot-cmake#覆盖模块列表]]
+- `MODULES_SINGLE` → [[02_code_twin/apps/infantry3-robot-cmake#覆盖模块列表]]
 - `foreach` → [[01_extracted/cmake-basic-syntax#foreach - 循环]]
 
 第一步：所有模块开关初始化为 0（关闭）。
