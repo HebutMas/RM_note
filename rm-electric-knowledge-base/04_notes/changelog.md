@@ -37,3 +37,14 @@
 ## 2026-07-14（四）
 
 - **重写 README**：精简为四层架构说明 + Obsidian 使用方式
+
+## 2026-07-14（五）
+
+- **01 层新增**：
+  - `stm32-can-filter.md`：结合 STM32F407 芯片手册提炼 CAN 过滤器配置规则（28 个 filter bank、双 CAN 分配、16 位尺度位映射、`<<5` 位移原因、掩码模式精确匹配）
+  - `kfifo-design.md`：kfifo 无锁环形缓冲区设计原理（SPSC 模型、in/out 持续递增、mask 位与、`__DMB()` 内存屏障、回绕拷贝）
+- **02 层新增**：
+  - `board/bsp/CAN/bsp_can.md`：CAN 硬件抽象层逐段解析（设备注册、过滤器配置、HAL 回调、发送逻辑）
+  - `board/bsp/CAN/bsp_can_task.md`：CAN 收发后台任务逐段解析（RX/TX Task、信号量驱动、三层缓冲）
+  - `utils/kfifo/kfifo.md`：kfifo 实现逐段解析（init、put/get、内存屏障、覆盖写）
+- **00 层整理**：reference-note/bsp/bsp代码.md 为旧版代码注释（链表+事件标志组），当前代码已改为数组查找表+信号量，标注"仅供 filter 配置方法参考"
