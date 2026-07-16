@@ -7,7 +7,7 @@
 
 ## DBUS（大疆 DT7+DR16）
 
-> 出处：[[00_raw/remote/dt7-dr16/RoboMaster遥控器接收机用户手册.pdf|RoboMaster遥控器接收机用户手册]] P.5-P.7
+> 出处：[[00_raw/remote/dt7-dr16/RoboMaster遥控器接收机用户手册.pdf#page=5|RoboMaster遥控器接收机用户手册 P.5]]-P.7
 
 ### 串口参数
 

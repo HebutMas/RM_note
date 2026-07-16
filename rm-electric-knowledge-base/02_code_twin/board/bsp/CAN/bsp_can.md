@@ -8,7 +8,7 @@
 
 ## 硬件背景
 
-F407 bxCAN 硬件资源（参考手册第 24 章，第 607 页起）：详见 [[01_extracted/hardware/can-filter]]。
+F407 bxCAN 硬件资源（参考手册第 24 章，第 607 页起）：详见 [[01_extracted/hardware/can-filter]]，或直接打开 [[00_raw/hardware/STM32F407中文手册(完全版) 高清完整.pdf#page=607|手册 P.607]]。
 
 - 双 CAN（CAN1 主 / CAN2 从），共享 512 字节 SRAM
 - 比特率高达 1 Mb/s，本项目配置：APB1=42MHz, Prescaler=3, BS1=10TQ, BS2=3TQ → 42M/(3×14) = **1 Mbps**
