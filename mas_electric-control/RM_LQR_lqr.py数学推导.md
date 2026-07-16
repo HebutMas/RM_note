@@ -462,6 +462,95 @@ $t=0$ 时云台偏离目标 5.7°，零初速。LQR 驱动其回到零位。
 
 ---
 
+### 8.6 固件实现：误差状态形式与「调节器 = 定点跟踪器」的等价性
+
+> 这是 `lqr.py`（Python 建模）与 `lqr.c`（MCU 固件）之间最容易让人困惑的断层：**建模时状态是绝对角度/角速度，控制律写成 $u=-\mathbf{K}\mathbf{x}$；但固件里 $\mathbf{K}$ 却是乘到误差 $e=\theta-\theta_{ref}$ 上的。** 本节证明二者在双积分器下完全等价，并指出其隐含前提。
+
+#### 8.6.1 两处代码的形式差异
+
+**Python 建模**（调节问题，把状态压到 0）：
+
+```python
+def dynamics(x, t):
+    return (A - B @ K) @ x       # u = -K·x，x 是绝对状态 [θ, θ̇]
+x0 = np.array([0.5, 0.0])         # 从绝对状态 0.5 rad 衰减到 0
+```
+
+**C 固件**（`lqr.c`，跟踪问题，把角度跟到 `ref`）：
+
+```c
+// state_dim == 2 分支
+lqr->measure = rad_degree;               // 当前角度 θ
+lqr->ref     = rad_ref;                  // 目标角度 θ_ref
+float err    = lqr->measure - lqr->ref;  // e = θ − θ_ref
+lqr->output  = -(lqr->K[0] * err) - lqr->K[1] * rad_angular_velocity;
+//              ↑ K₁ 乘到「角度误差」上      ↑ K₂ 乘到「原始角速度」上
+```
+
+表面矛盾：建模是 $u=-K_1\theta-K_2\dot\theta$，固件是 $u=-K_1(\theta-\theta_{ref})-K_2\dot\theta$。到底哪个对？
+
+#### 8.6.2 关键：定义误差状态
+
+要跟踪的是「把角度开到 $\theta_{ref}$ 并停住」，而非「把角度压到 0」。因此定义**误差状态向量**：
+
+$$\mathbf{e} = \mathbf{x} - \mathbf{x}_{ref}, \qquad \mathbf{x}_{ref} = \begin{bmatrix} \theta_{ref} \\ \dot\theta_{ref} \end{bmatrix} = \begin{bmatrix} \theta_{ref} \\ 0 \end{bmatrix}$$
+
+即目标是「到达 $\theta_{ref}$ 且角速度为 0」的静止定点。
+
+#### 8.6.3 误差动力学与原系统同构（核心证明）
+
+对 $\mathbf{e}$ 求导：
+
+$$\dot{\mathbf{e}} = \dot{\mathbf{x}} - \dot{\mathbf{x}}_{ref} = (\mathbf{A}\mathbf{x} + \mathbf{B}u) - \dot{\mathbf{x}}_{ref}$$
+
+代入 $\mathbf{x} = \mathbf{e} + \mathbf{x}_{ref}$：
+
+$$\dot{\mathbf{e}} = \mathbf{A}\mathbf{e} + \mathbf{A}\mathbf{x}_{ref} + \mathbf{B}u - \dot{\mathbf{x}}_{ref}$$
+
+现在检查两个「多出来的项」，正是它们决定了 K 能否直接复用：
+
+**项一** $\dot{\mathbf{x}}_{ref}$：目标角度是常值（阶跃指令），所以 $\dot{\mathbf{x}}_{ref}=\mathbf{0}$。
+
+**项二** $\mathbf{A}\mathbf{x}_{ref}$：代入双积分器的 $\mathbf{A}$——
+
+$$\mathbf{A}\mathbf{x}_{ref} = \begin{bmatrix} 0 & 1 \\ 0 & 0 \end{bmatrix}\begin{bmatrix} \theta_{ref} \\ 0 \end{bmatrix} = \begin{bmatrix} 0\cdot\theta_{ref} + 1\cdot 0 \\ 0 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \end{bmatrix} = \mathbf{0}$$
+
+之所以为零，是因为 $\mathbf{A}$ 的第一行只挑出「参考角速度」（=0），第二行全零。于是两项都消失：
+
+$$\boxed{\dot{\mathbf{e}} = \mathbf{A}\mathbf{e} + \mathbf{B}u}$$
+
+**误差状态满足与原系统完全相同的状态方程**。因此使 $\dot{\mathbf{x}}=\mathbf{A}\mathbf{x}+\mathbf{B}u$ 最优的那个 $\mathbf{K}$，直接作用在 $\mathbf{e}$ 上依然最优：
+
+$$u = -\mathbf{K}\mathbf{e} = -K_1(\theta - \theta_{ref}) - K_2(\dot\theta - \dot\theta_{ref})$$
+
+这就是 §4 求出的同一个 $\mathbf{K}$——**无需为跟踪问题重新求解 CARE**。这也说明 §8.5 里 Python 从 `x0=[0.5, 0]` 衰减到零位的仿真，本质上仿真的就是「初始误差 0.5 rad 如何收敛到 0」，与固件的跟踪行为是同一回事。
+
+#### 8.6.4 为什么角速度项用了「原始值」而非「误差值」
+
+对照 8.6.3 的完整误差律与固件写法：
+
+$$\underbrace{-K_2(\dot\theta - \dot\theta_{ref})}_{\text{理论}} \quad\text{vs.}\quad \underbrace{-K_2 \cdot \dot\theta}_{\text{lqr.c}}$$
+
+固件省略了 $\dot\theta_{ref}$，等价于**硬编码假设 $\dot\theta_{ref}=0$**——即目标是一个静止的定点。对绝大多数云台场景（锁一个固定装甲板中心、回中）这完全成立。
+
+| 参考角速度 $\dot\theta_{ref}$ | 场景 | 固件是否正确 |
+|---|---|---|
+| $=0$ | 云台定点、回中、锁静止目标 | ✅ 完全正确 |
+| $\neq 0$（常值） | 跟踪匀速转动/平移目标 | ⚠️ 缺前馈项，存在稳态跟踪误差 |
+
+若需跟踪动目标，应补上速度前馈：
+
+```c
+float err_vel = rad_angular_velocity - ref_angular_velocity;   // e₂ = θ̇ − θ̇_ref
+lqr->output   = -(lqr->K[0] * err) - lqr->K[1] * err_vel;
+```
+
+#### 8.6.5 一句话速记
+
+> **建模用绝对状态、固件用误差状态，不是 bug**：双积分器下 $\mathbf{A}\mathbf{x}_{ref}=\mathbf{0}$ 且常值指令 $\dot{\mathbf{x}}_{ref}=\mathbf{0}$，使误差动力学 $\dot{\mathbf{e}}=\mathbf{A}\mathbf{e}+\mathbf{B}u$ 与原系统同构，故调节器 K 直接就是定点跟踪器 K。角速度项用原始值 = 隐含假设目标静止。
+
+---
+
 ## 9. 扭矩约束下的可行域
 
 ### 9.1 扭矩-状态空间

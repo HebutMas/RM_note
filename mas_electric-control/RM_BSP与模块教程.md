@@ -318,7 +318,10 @@ uint32_t cdc_acm_recv(uint8_t busid, uint8_t *data, uint32_t len, uint32_t timeo
 **关键实现细节**：
 - H7 上使用 USB OTG HS（高速，批量端点 512 字节）
 - F4 上使用 USB OTG FS（全速，批量端点 64 字节）
-- 接收使用 kfifo + DWC2 的 4 字节对齐缓存管理
+- 接收：USB 端点先落进独立 buffer，`bulk_out` 回调再用 `kfifo_in()` 写入 kfifo 环形缓冲；发送用事件标志 `TX_OR` 做完成通知
+- 同步原语用**事件标志**（非信号量）：总线复位后靠 `USBD_EVENT_CONFIGURED` 重新置位 TX 标志自愈，无需在 RESET 里补令牌
+
+> ⚠️ **踩坑记录**：早期版本让 USB 硬件直接把数据落进 kfifo 存储区做"零拷贝"，并手动按 4 字节对齐推进 `in`，结果因帧长（21 字节）非对齐凭空塞洞，导致接收数据"只有帧头 [0]=0xBB、后面全 0"、虚拟串口间歇掉线。完整排障过程见 [[RM_USB_CDC虚拟串口调试实录]]。注意"DWC2 需 4 字节对齐"仅在 DMA 开启时成立，本项目 DMA 关闭（slave/FIFO 模式）无此要求。
 
 ### 2.12 Cache 一致性处理（H7 专有）
 
