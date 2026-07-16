@@ -85,7 +85,7 @@ _vscode/tasks.json
                   │   │   ├─ include(module_config.cmake)
                   │   │   │   └→ [[02_code_twin/modules/module_config-cmake]]
                   │   │   └─ include(infantry3/robot.cmake)
-                  │   │       └→ [[02_code_twin/apps/infantry3-robot-cmake]]
+                  │   │       └→ [[02_code_twin/apps/infantry3/robot-cmake]]
                   │   │
                   │   └─ include(generate_headers.cmake)
                   │       └→ [[02_code_twin/apps/generate_headers-cmake]]

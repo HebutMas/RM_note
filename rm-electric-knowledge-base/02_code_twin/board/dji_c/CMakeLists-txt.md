@@ -53,11 +53,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 - `include` → [[01_extracted/cmake-basic-syntax#include - 粘贴到当前位置]]
 
-| 语句                                   | 作用                                                                                                     |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| `include(config.cmake)`              | 加载 [[02_code_twin/apps/config-cmake]]，设置 `ROBOT`/`BOARD` 和 `MODULE_XXX` 条件编译开关                         |
-| `include(generate_headers.cmake)`    | 加载 [[02_code_twin/apps/generate_headers-cmake]]，把 CMake 变量翻译成 C 宏，生成 `robot_def.h` 和 `module_config.h` |
-| `CMAKE_EXPORT_COMPILE_COMMANDS TRUE` | 生成 `compile_commands.json`，供 [[02_code_twin/_vscode/settings-json]] 中的 clangd 做代码跳转                    |
+| 语句                                                          | 作用                                                                                                                                                                |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `include(config.cmake)`                                     | 加载 [[02_code_twin/apps/config-cmake]]，设置 `ROBOT`/`BOARD` 和 `MODULE_XXX` 条件编译开关                                                                                    |
+| `set(_generated_dir ${CMAKE_CURRENT_BINARY_DIR}/generated)` | 定义 `_generated_dir`，指向 [[02_code_twin/_vscode/tasks-json#阶段一：配置（Configure）\|-B 指定的构建目录]] 下的 `generated/` 子目录，下一行 [[02_code_twin/apps/generate_headers-cmake]] 会用到 |
+| `include(generate_headers.cmake)`                           | 加载 [[02_code_twin/apps/generate_headers-cmake]]，把 CMake 变量翻译成 C 宏，生成 `robot_def.h` 和 `module_config.h`                                                            |
+| `CMAKE_EXPORT_COMPILE_COMMANDS TRUE`                        | 生成 `compile_commands.json`，供 [[02_code_twin/_vscode/settings-json]] 中的 clangd 做代码跳转                                                                               |
 
 ### 子模块集成
 

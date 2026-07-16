@@ -28,7 +28,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/../modules/module_config.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/${ROBOT}/robot.cmake)
 ```
 
-先加载 [[02_code_twin/modules/module_config-cmake]]（默认参数模板），再加载 [[02_code_twin/apps/infantry3-robot-cmake]]（机器人差异配置，覆盖默认值）。
+先加载 [[02_code_twin/modules/module_config-cmake]]（默认参数模板），再加载 [[02_code_twin/apps/infantry3/robot-cmake]]（机器人差异配置，覆盖默认值）。
 
 ### 派生变量
 
@@ -59,12 +59,12 @@ foreach(_m ${_enabled})
 endforeach()
 ```
 
-- `MODULES_SINGLE` → [[02_code_twin/apps/infantry3-robot-cmake#覆盖模块列表]]
+- `MODULES_SINGLE` → [[02_code_twin/apps/infantry3/robot-cmake#覆盖模块列表]]
 - `foreach` → [[01_extracted/cmake-basic-syntax#foreach - 循环]]
 
 第一步：所有模块开关初始化为 0（关闭）。
 
-第二步：从 `MODULES_SINGLE`（在 [[02_code_twin/modules/module_config-cmake]] 或 [[02_code_twin/apps/infantry3-robot-cmake]] 中定义）取出启用的模块列表，把对应的 `MODULE_XXX` 设为 1。
+第二步：从 `MODULES_SINGLE`（在 [[02_code_twin/modules/module_config-cmake]] 或 [[02_code_twin/apps/infantry3/robot-cmake]] 中定义）取出启用的模块列表，把对应的 `MODULE_XXX` 设为 1。
 
 以 `infantry3 single` 为例，`MODULES_SINGLE` 最终值（被 robot.cmake 覆盖后）是 `OFFLINE REMOTE BMI088 INS REFEREE SUPERCAP VISION MOTOR`，所以这 8 个模块的 `MODULE_XXX` 被设为 1，其余保持 0。
 
