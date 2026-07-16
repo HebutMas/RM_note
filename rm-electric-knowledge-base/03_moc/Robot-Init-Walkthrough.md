@@ -20,13 +20,13 @@ Robot_Init()                        ← robot/robot_init.c
   │
   ├─ MODULE_Init()                  ← modules/module_init.c
   │    ├─ Module_Offline_init()     → [[02_code_twin/modules/OFFLINE/module_offline-c]]
-  │    ├─ Module_Remote_init()      ← SBUS/DT7 + VT02/VT03
+  │    ├─ Module_Remote_init()      → [[02_code_twin/modules/REMOTE/module_remote]] → SBUS: [[02_code_twin/modules/REMOTE/SBUS/sbus]] / DT7: [[02_code_twin/modules/REMOTE/DT7/dt7]]
   │    ├─ Module_BMI088_init()      ← IMU
   │    ├─ Module_INS_Init()         ← 姿态解算
   │    ├─ Module_Referee_Init()     ← 裁判系统
   │    ├─ Module_WT606_Init()       ← 陀螺仪
   │    ├─ Module_SuperCap_Init()    ← 超级电容
-  │    ├─ Module_Motor_Init()       ← 2ms 循环, 链表调度
+  │    ├─ Module_Motor_Init()       → [[02_code_twin/modules/MOTOR/motor_base]] (2ms 循环, 链表调度)
   │    ├─ Module_Vision_Init()      ← 视觉通信
   │    └─ Module_BoardComm_Init()   ← 板间通信
   │
@@ -40,13 +40,13 @@ Robot_Init()                        ← robot/robot_init.c
 
 顺序固定，前一步是后一步的前置条件：
 
-| 调用 | 为什么必须在前面 |
-|------|-----------------|
-| `tx_byte_pool_create()` 最先 | 后续所有 `BSP_MEM_ALLOC_WAIT` 依赖此内存池 |
-| `BSP_DWT_Init()` 在 Offline 之前 | Offline 依赖 `BSP_DWT_GetTimeline_ms()` 获取时间戳 |
-| `Module_Offline_init()` 第一个 | 后续模块调 `Module_Offline_register()` 依赖 `g_initialized`，链表注册见 [[01_extracted/algorithm/data-structure-linked-list#注册 = 分配 + 填充 + 头插]] |
-| `BSP_CAN_TaskInit()` 在 Motor 之前 | 电机初始化调 `BSP_CAN_Device_Init()` 依赖 CAN 总线已启动 |
-| `Module_Motor_Init()` 在 APP_Init 之前 | `robot_control_init()` 注册电机时挂入链表，motor task 需已就绪 |
+| 调用                                  | 为什么必须在前面                                                                                                                           |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `tx_byte_pool_create()` 最先          | 后续所有 `BSP_MEM_ALLOC_WAIT` 依赖此内存池                                                                                                   |
+| `BSP_DWT_Init()` 在 Offline 之前       | Offline 依赖 `BSP_DWT_GetTimeline_ms()` 获取时间戳                                                                                        |
+| `Module_Offline_init()` 第一个         | 后续模块调 `Module_Offline_register()` 依赖 `g_initialized`，链表注册见 [[01_extracted/algorithm/data-structure-linked-list#注册 = 分配 + 填充 + 头插]] |
+| `BSP_CAN_TaskInit()` 在 Motor 之前     | 电机初始化调 `BSP_CAN_Device_Init()` 依赖 CAN 总线已启动                                                                                        |
+| `Module_Motor_Init()` 在 APP_Init 之前 | `robot_control_init()` 注册电机时挂入链表，motor task 需已就绪                                                                                   |
 
 ## APP_Init()
 
