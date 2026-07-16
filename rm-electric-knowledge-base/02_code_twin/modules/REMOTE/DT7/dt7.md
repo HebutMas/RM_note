@@ -62,14 +62,39 @@ int16_t ch4 = (buf[i + 4] >> 1 | buf[i + 5] << 7) & 0x07FF;
 
 注意 SBUS 的 buf 索引从 `i+1` 开始（跳过帧头 `0x0F`），DT7 从 `i` 开始（无帧头）。
 
-### 零偏与死区
+### 死区映射逻辑（核心）
+
+DT7 通道分为两类，与 SBUS 相同的处理策略：
+
+**CH1~CH4（摇杆通道）—— 减偏移 + 死区过滤**
 
 ```c
+// 第一步：范围校验（在帧边界校验阶段已完成）
+if (ch1 < DT7_CH_VALUE_MIN || ch1 > DT7_CH_VALUE_MAX) continue;
+
+// 第二步：减去中值偏移
 data->channels[0] = ch1 - DT7_CH_VALUE_OFFSET;  // 1024 → 0
-if (abs(data->channels[0]) <= REMOTE_DEAD_ZONE) data->channels[0] = 0;
+
+// 第三步：死区过滤
+if (abs(data->channels[0]) <= REMOTE_DEAD_ZONE) data->channels[0] = 0;  // ±10 以内归零
 ```
 
-`DT7_CH_VALUE_OFFSET (1024)` 等于 SBUS 的 `SBUS_CHX_BIAS`，同一个中值。死区逻辑也相同。
+- `DT7_CH_VALUE_MIN (364)` / `DT7_CH_VALUE_MAX (1684)`：有效范围
+- `DT7_CH_VALUE_OFFSET (1024)`：中值偏移，等于 SBUS 的 `SBUS_CHX_BIAS`
+- `REMOTE_DEAD_ZONE (10)`：死区阈值
+
+减偏移后的值范围：`364-1024 = -660` ~ `1684-1024 = +660`。
+
+通道与物理操控的对应关系见 [[01_extracted/remote/remote_protocol#通道映射（DBUS / DT7）]]。
+
+**拨杆开关 S1/S2 —— 离散量，不减偏移、不做死区**
+
+```c
+data->dt7.sw1 = ((buf[i + 5] >> 4) & 0x000C) >> 2;  // 1=上, 3=中, 2=下
+data->dt7.sw2 = (buf[i + 5] >> 4) & 0x0003;
+```
+
+拨杆是 2bit 离散值，只有三个固定值，不需要死区。
 
 ### 拨杆开关
 
