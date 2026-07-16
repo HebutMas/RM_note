@@ -21,7 +21,40 @@ F407 bxCAN 硬件资源（参考手册第 24 章，第 607 页起）：详见 [[
 #define BSP_CAN_TX_FIFO_SIZE    8   // 软件 tx_fifo 容量
 ```
 
-每条总线用 `can_dev_slot_t devices[8]` 数组做查找表，按 `rx_id` 线性查找。8 个设备够用（电机 4-8 台 + 超电 + 板间通信）。
+每条总线用 `can_dev_slot_t devices[8]` 数组做查找表，按 `rx_id` 线性查找。数组存 `rx_id` + `Can_Device *` 指针，设备结构体从内存池 malloc 后填入空槽位。这种"数组槽位 + 指针"的分配方式与 Motor/Offline 模块的链表方式不同，详见 [[01_extracted/algorithm/array-vs-linked-list]]。
+
+### 总线容量分析
+
+1 Mbps 下的标准数据帧（11bit ID + 8 字节数据）位长：
+
+| 段 | 位数 |
+|----|------|
+| SOF + 仲裁段 + 控制段 | 19 |
+| 数据段（8 字节） | 64 |
+| CRC + ACK + EOF + 帧间隔 | 28 |
+| **不含填充合计** | **111 bit** |
+
+CAN 位填充规则：连续 5 个相同电平 bit 后插入 1 个反相 bit。固定格式段不超过 5 个连续同电平，真正触发填充的是 64 bit 数据段。电机数据（编码器值、电流、温度）不会全 0 或全 1，典型填充 3~5 次，帧长约 114~116 bit。最坏情况（数据全 0/全 1）帧长 127 bit。
+
+| 帧长 | 最大帧率 |
+|------|---------|
+| 111 bit（无填充） | 9009 帧/s |
+| 115 bit（典型） | 8696 帧/s |
+| 127 bit（最坏） | 7874 帧/s |
+
+**实际场景**（6 个电机，2ms 控制周期）：
+
+| 来源 | 帧率 |
+|------|------|
+| 4 个 M3508 发送（共用 0x200/0x1FF） | 1000 帧/s |
+| 4 个 M3508 反馈（1kHz） | 4000 帧/s |
+| 1 个 GM6020 反馈 | 1000 帧/s |
+| 1 个 M2006 反馈 | 1000 帧/s |
+| 控制帧（6020+2006） | 500 帧/s |
+| **合计** | **7500 帧/s** |
+
+7500 帧/s × 115 bit ≈ 862,500 bit/s，总线负载率约 86%。实际跑得动，因为电机反馈是周期性的（非突发），CAN 硬件仲裁保证高优先级帧不丢，且实际帧长不会都是最坏情况。
+
 
 ## BSP_CanMsg_t — CAN 消息结构体
 
@@ -65,21 +98,42 @@ typedef struct {
 
 `user_arg` 是回调上下文：注册时存入（比如电机指针），回调时取回，这样回调函数知道该把数据写进哪个实例。大疆电机注册示例见 [[02_code_twin/modules/MOTOR/DJI/motor_dji#CAN 接收回调]]。
 
-## 设备查找表（替代链表）
+## 设备查找表
 
-CAN 模块用**数组查找表**而非链表。每条总线最多 8 个设备，用 `rx_id` 做键线性查找：
+CAN 模块用**数组槽位 + 指针**管理设备。数组 `devices[8]` 是静态分配的，每个槽位存 `rx_id` + `Can_Device *` 指针：
 
 ```c
-Can_Device *can_dev_find(CAN_Bus_Manager *bus, uint32_t id) {
+typedef struct {
+    uint32_t    rx_id;  // 接收帧 ID，用于匹配
+    Can_Device *dev;    // 设备指针，NULL = 空闲槽位
+} can_dev_slot_t;
+```
+
+查找时遍历数组比 `rx_id`：
+
+```c
+static inline Can_Device *can_dev_find(CAN_Bus_Manager *bus, uint32_t rx_id) {
     for (int i = 0; i < BSP_CAN_MAX_DEV_PER_BUS; i++) {
-        if (bus->devices[i].used && bus->devices[i].dev->rx_id == id)
-            return bus->devices[i].dev;
+        if (bus->devices[i].rx_id == rx_id) return bus->devices[i].dev;
     }
     return NULL;
 }
 ```
 
-设备少时数组比链表更 cache 友好。链表模式见 [[01_extracted/algorithm/data-structure-linked-list]]（Offline/Motor 模块用链表）。
+分配时空槽位管理 + 内存池 malloc：
+
+```c
+static inline int can_dev_find_empty(CAN_Bus_Manager *bus) {
+    for (int i = 0; i < BSP_CAN_MAX_DEV_PER_BUS; i++) {
+        if (bus->devices[i].dev == NULL) return i;  // 找空槽位
+    }
+    return -1;
+}
+// BSP_MEM_ALLOC_WAIT(dev, sizeof(Can_Device), ...);  // 从内存池分配
+// can_dev_insert(bus, slot, rx_id, dev);             // 填入槽位
+```
+
+数组连续访问比链表指针跳转更 cache 友好，设备少（≤8）时实际查找更快。与 Motor/Offline 模块链表方式的对比见 [[01_extracted/algorithm/array-vs-linked-list]]。
 
 ## 初始化：`BSP_CAN_TaskInit()`
 
