@@ -76,4 +76,4 @@ void            Module_Offline_device_enable(Offline_Device *dev);
 void            Module_Offline_device_disable(Offline_Device *dev);
 ```
 
-实现解析见 [[02_code_twin/modules/OFFLINE/module_offline-c]]，初始化全流程见 [[03_moc/Robot-Init-Walkthrough]]。
+实现解析见 [[02_code_twin/modules/OFFLINE/module_offline-c]]。

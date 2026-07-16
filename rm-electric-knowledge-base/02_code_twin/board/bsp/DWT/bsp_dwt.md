@@ -23,7 +23,7 @@ void BSP_DWT_Init(uint32_t CPU_Freq_mHz) {
 }
 ```
 
-C 板（F407）传 168，A 板（H723）传 480。在 `BSP_Init()` 中调用，见 [[03_moc/Robot-Init-Walkthrough#全流程]]。
+C 板（F407）传 168，A 板（H723）传 480。在 `BSP_Init()` 中调用。
 
 初始化时还会初始化溢出计数器 `CYCCNT_RountCount = 0` 和 `CYCCNT_LAST = DWT->CYCCNT`（用于溢出检测）。
 

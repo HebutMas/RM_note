@@ -106,7 +106,7 @@ typedef struct {
 } DM_Motor_t;
 ```
 
-`base` 必须是第一个字段，这样 `MOTOR_GET_DERIVED(base_ptr, DJI_Motor_t)` 才能正确工作（指针地址相同，直接强转）。
+`base` 必须是第一个字段，这样 `MOTOR_GET_DERIVED` 才能正确工作。原理见 [[01_extracted/algorithm/function-pointer-pattern#基类指针还原派生类]]。
 
 ## Motor_Init_Config_s — 统一初始化配置
 

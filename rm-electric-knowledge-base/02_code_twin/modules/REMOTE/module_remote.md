@@ -95,4 +95,4 @@ uint8_t Module_Remote_get_offline_status(void) {
 
 ## 与 03 层的链接
 
-初始化调用顺序见 [[03_moc/Robot-Init-Walkthrough#MODULE_Init() 调用顺序]]，Remote 在 Offline 之后初始化。
+Remote 在 Offline 之后初始化。

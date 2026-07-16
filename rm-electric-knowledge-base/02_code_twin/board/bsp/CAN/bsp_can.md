@@ -123,4 +123,4 @@ CAN 用两个全局信号量（`g_can_rx_sem` / `g_can_tx_sem`），不是事件
 
 ## 任务初始化：`BSP_CAN_TaskInit()`
 
-创建两个信号量 + 两个线程（RX 优先级 3，TX 优先级 4），必须在 `BSP_CAN_Device_Init()` 之前调用。见 [[03_moc/Robot-Init-Walkthrough#全流程]] 中 `BSP_CAN_TaskInit` 的位置。
+创建两个信号量 + 两个线程（RX 优先级 3，TX 优先级 4），必须在 `BSP_CAN_Device_Init()` 之前调用。在 `BSP_Init()` 阶段调用 `BSP_CAN_TaskInit()`。

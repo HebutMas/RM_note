@@ -76,7 +76,7 @@ MX_IWDG_Init();               // 独立看门狗
 __HAL_DBGMCU_FREEZE_IWDG();   // 调试器暂停时冻结看门狗
 ```
 
-必须在所有其他模块之前调用，因为后续模块注册设备依赖 `g_initialized`。见 [[03_moc/Robot-Init-Walkthrough#MODULE_Init() 调用顺序]]。
+必须在所有其他模块之前调用，因为后续模块注册设备依赖 `g_initialized`。在 `MODULE_Init()` 中最先调用。
 
 看门狗的作用：如果检测任务卡死（比如死循环），看门狗超时后复位 MCU。调试器暂停时冻结看门狗，防止断点调试时触发复位。
 

@@ -57,4 +57,4 @@ while (1) {
 | 栈大小 | 1024B | `APPS_STACK_SECTION` 放 CCMRAM/DTCM |
 | 时间片 | TX_NO_TIME_SLICE | 不抢占同优先级 |
 
-初始化在 [[03_moc/Robot-Init-Walkthrough#全流程]] 的 `BSP_Init()` 阶段调用。
+在 `BSP_Init()` 阶段调用。
