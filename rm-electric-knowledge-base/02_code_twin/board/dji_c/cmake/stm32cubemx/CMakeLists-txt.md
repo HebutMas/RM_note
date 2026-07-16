@@ -97,13 +97,13 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${MX_Application_Src})
 target_link_libraries(${CMAKE_PROJECT_NAME} STM32_Drivers ${TOOLCHAIN_LINK_LIBRARIES})
 ```
 
-- `add_library(INTERFACE)` → [[01_extracted/gcc-cmake-build#add_library(INTERFACE) - 只传属性不编译]]
-- `target_include_directories` → [[01_extracted/gcc-cmake-build#target_include_directories - 头文件搜索路径]]
-- `target_compile_definitions` → [[01_extracted/gcc-cmake-build#target_compile_definitions - 预处理宏]]
-- `add_library(OBJECT)` → [[01_extracted/gcc-cmake-build#add_library(OBJECT) - .o 直接注入 elf]]
-- `target_sources` → [[01_extracted/gcc-cmake-build#target_sources - 指定编译哪些源文件]]
-- `target_link_libraries` → [[01_extracted/gcc-cmake-build#target_link_libraries - 链接哪些库]]
-- `INTERFACE`/`PUBLIC`/`PRIVATE` 关键字 → [[01_extracted/gcc-cmake-build#五、作用域与 PRIVATE / PUBLIC / INTERFACE]]
+- `add_library(INTERFACE)` → [[01_extracted/cmake/gcc-cmake-build#add_library(INTERFACE) - 只传属性不编译]]
+- `target_include_directories` → [[01_extracted/cmake/gcc-cmake-build#target_include_directories - 头文件搜索路径]]
+- `target_compile_definitions` → [[01_extracted/cmake/gcc-cmake-build#target_compile_definitions - 预处理宏]]
+- `add_library(OBJECT)` → [[01_extracted/cmake/gcc-cmake-build#add_library(OBJECT) - .o 直接注入 elf]]
+- `target_sources` → [[01_extracted/cmake/gcc-cmake-build#target_sources - 指定编译哪些源文件]]
+- `target_link_libraries` → [[01_extracted/cmake/gcc-cmake-build#target_link_libraries - 链接哪些库]]
+- `INTERFACE`/`PUBLIC`/`PRIVATE` 关键字 → [[01_extracted/cmake/gcc-cmake-build#五、作用域与 PRIVATE / PUBLIC / INTERFACE]]
 
 **为什么分两个库？**
 

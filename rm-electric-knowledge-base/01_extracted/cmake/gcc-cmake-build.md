@@ -1,7 +1,7 @@
 # GCC 与 CMake 构建流程
 
 > 从 `.c` 到 `.elf` 的完整流程，以及 CMake 如何通过 target 命令控制这个流程。
-> 前置知识：[[01_extracted/cmake-basic-syntax]]
+> 前置知识：[[01_extracted/cmake/cmake-basic-syntax]]
 
 ---
 
@@ -427,7 +427,7 @@ add_subdirectory(../../utils ...)
 
 ### 对比 include
 
-`include` 的语法见 [[01_extracted/cmake-basic-syntax#include - 粘贴到当前位置]]。
+`include` 的语法见 [[01_extracted/cmake/cmake-basic-syntax#include - 粘贴到当前位置]]。
 
 | | `include()` | `add_subdirectory()` |
 |---|---|---|

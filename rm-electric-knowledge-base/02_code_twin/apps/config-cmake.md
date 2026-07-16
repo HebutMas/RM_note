@@ -42,7 +42,7 @@ set(CHASSIS_BOARD 0)
 set(${BOARD_UPPER}_BOARD 1)             # 等价于 set(SINGLE_BOARD 1)
 ```
 
-- `string` → [[01_extracted/cmake-basic-syntax#string - 字符串操作]]
+- `string` → [[01_extracted/cmake/cmake-basic-syntax#string - 字符串操作]]
 
 通过字符串拼接动态设置板型宏——`BOARD=single` 时只有 `SINGLE_BOARD=1`，其余为 0。
 
@@ -60,7 +60,7 @@ endforeach()
 ```
 
 - `MODULES_SINGLE` → [[02_code_twin/apps/infantry3/robot-cmake#覆盖模块列表]]
-- `foreach` → [[01_extracted/cmake-basic-syntax#foreach - 循环]]
+- `foreach` → [[01_extracted/cmake/cmake-basic-syntax#foreach - 循环]]
 
 第一步：所有模块开关初始化为 0（关闭）。
 

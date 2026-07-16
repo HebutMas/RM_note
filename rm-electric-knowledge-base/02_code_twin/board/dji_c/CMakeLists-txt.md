@@ -31,8 +31,8 @@ set(THREADX_ARCH cortex_m4)
 ```
 
 -`CMAKE_BUILD_TYPE`→[[02_code_twin/board/dji_c/CMakePresets-json#Debug / Release 预设]]
-- `set` → [[01_extracted/cmake-basic-syntax#set - 设置变量]]
-- `if` → [[01_extracted/cmake-basic-syntax#if - 条件判断]]
+- `set` → [[01_extracted/cmake/cmake-basic-syntax#set - 设置变量]]
+- `if` → [[01_extracted/cmake/cmake-basic-syntax#if - 条件判断]]
 
 | 设置                        | 含义                             |
 | ------------------------- | ------------------------------ |
@@ -51,7 +51,7 @@ include(${CMAKE_SOURCE_DIR}/../../apps/generate_headers.cmake)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 ```
 
-- `include` → [[01_extracted/cmake-basic-syntax#include - 粘贴到当前位置]]
+- `include` → [[01_extracted/cmake/cmake-basic-syntax#include - 粘贴到当前位置]]
 
 | 语句                                                          | 作用                                                                                                                                                                |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -77,9 +77,9 @@ add_subdirectory(../../apps ...)
 add_subdirectory(../../CMSIS-DSP ...)
 ```
 
-- `project` → [[01_extracted/gcc-cmake-build#三、project - 声明项目名称]]
-- `add_executable` → [[01_extracted/gcc-cmake-build#add_executable - 创建可执行文件目标]]
-- `add_subdirectory` → [[01_extracted/gcc-cmake-build#add_subdirectory - 进入子目录执行]]
+- `project` → [[01_extracted/cmake/gcc-cmake-build#三、project - 声明项目名称]]
+- `add_executable` → [[01_extracted/cmake/gcc-cmake-build#add_executable - 创建可执行文件目标]]
+- `add_subdirectory` → [[01_extracted/cmake/gcc-cmake-build#add_subdirectory - 进入子目录执行]]
 
 每个 `add_subdirectory` 的两个参数：第一个是**源码路径**（相对 `CMAKE_SOURCE_DIR`），第二个是**构建目录名**（相对 `CMAKE_BINARY_DIR`）。`../../` 向上穿越两级从 `board/dji_c/` 回到项目根目录。
 
@@ -114,8 +114,8 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 target_link_options(${CMAKE_PROJECT_NAME} PRIVATE -flto)
 ```
 
-- `target_link_libraries` → [[01_extracted/gcc-cmake-build#target_link_libraries - 链接哪些库]]
-- `target_link_options` → [[01_extracted/gcc-cmake-build#target_link_options - 链接器选项]]
+- `target_link_libraries` → [[01_extracted/cmake/gcc-cmake-build#target_link_libraries - 链接哪些库]]
+- `target_link_options` → [[01_extracted/cmake/gcc-cmake-build#target_link_options - 链接器选项]]
 
 把所有库链接到 `base.elf`。`-flto` 启用链接时优化（LTO），让编译器跨模块边界做内联和死代码消除。
 

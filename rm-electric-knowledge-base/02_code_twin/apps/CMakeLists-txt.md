@@ -35,7 +35,7 @@ if(EXISTS ${_robot_board_dir})
 endif()
 ```
 
-`file(GLOB_RECURSE)` 递归扫描 `apps/infantry3/single_board/` 下所有子目录的 `.c` 文件。往这个目录里加新文件不需要改 CMakeLists.txt。详见 [[01_extracted/cmake-basic-syntax#file(GLOB_RECURSE) - 递归扫描文件]]
+`file(GLOB_RECURSE)` 递归扫描 `apps/infantry3/single_board/` 下所有子目录的 `.c` 文件。往这个目录里加新文件不需要改 CMakeLists.txt。详见 [[01_extracted/cmake/cmake-basic-syntax#file(GLOB_RECURSE) - 递归扫描文件]]
 
 ### 自动收集头文件路径
 
@@ -62,10 +62,10 @@ if(EXISTS ${_robot_board_dir})
 endif()
 ```
 
-- `file(GLOB_RECURSE)` → [[01_extracted/cmake-basic-syntax#file(GLOB_RECURSE) - 递归扫描文件]]
-- `foreach` → [[01_extracted/cmake-basic-syntax#foreach - 循环]]
-- `list` → [[01_extracted/cmake-basic-syntax#list - 列表操作]]
-- `get_filename_component` → [[01_extracted/cmake-basic-syntax#get_filename_component - 提取路径组件]]
+- `file(GLOB_RECURSE)` → [[01_extracted/cmake/cmake-basic-syntax#file(GLOB_RECURSE) - 递归扫描文件]]
+- `foreach` → [[01_extracted/cmake/cmake-basic-syntax#foreach - 循环]]
+- `list` → [[01_extracted/cmake/cmake-basic-syntax#list - 列表操作]]
+- `get_filename_component` → [[01_extracted/cmake/cmake-basic-syntax#get_filename_component - 提取路径组件]]
 
 再扫描 `single_board/` 下所有 `.h` 文件，提取每个文件所在目录加入头文件路径，最后 `list(REMOVE_DUPLICATES)` 去重。这样源码里 `#include "chassis.h"` 就能自动找到 `single_board/chassis/chassis.h` 所在的目录。
 
@@ -87,11 +87,11 @@ target_include_directories(app PUBLIC
 target_link_libraries(app PUBLIC stm32cubemx azrtos::threadx utils bsp CMSISDSP modules)
 ```
 
-- `add_library(OBJECT)` → [[01_extracted/gcc-cmake-build#add_library(OBJECT) - .o 直接注入 elf]]
-- `target_compile_options` → [[01_extracted/gcc-cmake-build#target_compile_options - 编译器选项]]
-- `target_include_directories` → [[01_extracted/gcc-cmake-build#target_include_directories - 头文件搜索路径]]
-- `target_link_libraries` → [[01_extracted/gcc-cmake-build#target_link_libraries - 链接哪些库]]
-- `PRIVATE`/`PUBLIC` 关键字 → [[01_extracted/gcc-cmake-build#五、作用域与 PRIVATE / PUBLIC / INTERFACE]]
+- `add_library(OBJECT)` → [[01_extracted/cmake/gcc-cmake-build#add_library(OBJECT) - .o 直接注入 elf]]
+- `target_compile_options` → [[01_extracted/cmake/gcc-cmake-build#target_compile_options - 编译器选项]]
+- `target_include_directories` → [[01_extracted/cmake/gcc-cmake-build#target_include_directories - 头文件搜索路径]]
+- `target_link_libraries` → [[01_extracted/cmake/gcc-cmake-build#target_link_libraries - 链接哪些库]]
+- `PRIVATE`/`PUBLIC` 关键字 → [[01_extracted/cmake/gcc-cmake-build#五、作用域与 PRIVATE / PUBLIC / INTERFACE]]
 
 `app_init.c` 是固定文件（所有机器人共用），`${_robot_sources}` 是自动收集的业务代码。和 modules 一样用 `-include module_config.h` 强制注入配置宏。
 

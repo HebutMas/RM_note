@@ -49,7 +49,7 @@ file(WRITE ${_generated_dir}/robot_def.h
 ")
 ```
 
-- `file` → [[01_extracted/cmake-basic-syntax#file - 文件操作]]
+- `file` → [[01_extracted/cmake/cmake-basic-syntax#file - 文件操作]]
 
 `file(WRITE 路径 内容)` 直接写文件。`${ROBOT_UPPER}` 在配置阶段被替换为 `INFANTRY3`，所以最终写入的文件内容是：
 
@@ -71,7 +71,7 @@ function(_gen_cmakedefine OUT_VAR NAME VALUE_VAR)
 endfunction()
 ```
 
-- `function` → [[01_extracted/cmake-basic-syntax#function - 自定义函数]]
+- `function` → [[01_extracted/cmake/cmake-basic-syntax#function - 自定义函数]]
 
 这个函数模拟了 CMake 的 `#cmakedefine` 行为：如果变量已定义且不是 FALSE/0/空，就生成 `#define NAME value`；否则生成 `/* #undef NAME */`（注释掉）。
 

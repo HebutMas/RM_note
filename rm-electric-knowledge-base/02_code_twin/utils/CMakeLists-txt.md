@@ -38,12 +38,12 @@ target_link_libraries(utils PUBLIC stm32cubemx azrtos::threadx)
 
 这是项目中结构最简单的 CMakeLists.txt，也是**简单模式**的模板。后续 bsp、robot 的结构和它完全一致。
 
-- `add_library(OBJECT)` → [[01_extracted/gcc-cmake-build#add_library(OBJECT) - .o 直接注入 elf]]（创建时直接内联源文件的写法）
-- `源文件的两种写法` → [[01_extracted/gcc-cmake-build#源文件的两种写法]]
-- `target_compile_options` → [[01_extracted/gcc-cmake-build#target_compile_options - 编译器选项]]
-- `target_include_directories` → [[01_extracted/gcc-cmake-build#target_include_directories - 头文件搜索路径]]
-- `target_link_libraries` → [[01_extracted/gcc-cmake-build#target_link_libraries - 链接哪些库]]
-- `PRIVATE`/`PUBLIC`/`INTERFACE` 关键字 → [[01_extracted/gcc-cmake-build#五、作用域与 PRIVATE / PUBLIC / INTERFACE]]
+- `add_library(OBJECT)` → [[01_extracted/cmake/gcc-cmake-build#add_library(OBJECT) - .o 直接注入 elf]]（创建时直接内联源文件的写法）
+- `源文件的两种写法` → [[01_extracted/cmake/gcc-cmake-build#源文件的两种写法]]
+- `target_compile_options` → [[01_extracted/cmake/gcc-cmake-build#target_compile_options - 编译器选项]]
+- `target_include_directories` → [[01_extracted/cmake/gcc-cmake-build#target_include_directories - 头文件搜索路径]]
+- `target_link_libraries` → [[01_extracted/cmake/gcc-cmake-build#target_link_libraries - 链接哪些库]]
+- `PRIVATE`/`PUBLIC`/`INTERFACE` 关键字 → [[01_extracted/cmake/gcc-cmake-build#五、作用域与 PRIVATE / PUBLIC / INTERFACE]]
 
 ### 关键字选择
 

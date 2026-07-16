@@ -91,11 +91,11 @@ target_link_libraries(modules PUBLIC stm32cubemx azrtos::threadx m CMSISDSP bsp 
 - `module_config.h` 是由 [[02_code_twin/board/dji_c/CMakeLists-txt#配置系统加载]] 中 `include(generate_headers.cmake)` 调用 [[02_code_twin/apps/generate_headers-cmake]] 把 CMake 变量自动转成宏定义生成的 `.h` 文件
 
 链接回 01 层：
-- `add_library(OBJECT)` → [[01_extracted/gcc-cmake-build#add_library(OBJECT) - .o 直接注入 elf]]（变量传入的混合写法）
-- `target_compile_options` → [[01_extracted/gcc-cmake-build#target_compile_options - 编译器选项]]
-- `target_include_directories` → [[01_extracted/gcc-cmake-build#target_include_directories - 头文件搜索路径]]
-- `target_link_libraries` → [[01_extracted/gcc-cmake-build#target_link_libraries - 链接哪些库]]
-- `PRIVATE`/`PUBLIC` 关键字 → [[01_extracted/gcc-cmake-build#五、作用域与 PRIVATE / PUBLIC / INTERFACE]]
+- `add_library(OBJECT)` → [[01_extracted/cmake/gcc-cmake-build#add_library(OBJECT) - .o 直接注入 elf]]（变量传入的混合写法）
+- `target_compile_options` → [[01_extracted/cmake/gcc-cmake-build#target_compile_options - 编译器选项]]
+- `target_include_directories` → [[01_extracted/cmake/gcc-cmake-build#target_include_directories - 头文件搜索路径]]
+- `target_link_libraries` → [[01_extracted/cmake/gcc-cmake-build#target_link_libraries - 链接哪些库]]
+- `PRIVATE`/`PUBLIC` 关键字 → [[01_extracted/cmake/gcc-cmake-build#五、作用域与 PRIVATE / PUBLIC / INTERFACE]]
 
 `-include module_config.h` 等价于在每个 `.c` 文件第一行自动加 `#include "module_config.h"`。这样源代码里的 `#if MODULE_BMI088` 守卫才能正确判断。
 
