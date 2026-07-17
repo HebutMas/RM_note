@@ -32,7 +32,7 @@ CMakeLists.txt (board/dji_c)   ← 项目入口，整个构建的指挥中心
   │
   ├─ include(config.cmake)           → 配置链（选机器人、选板型、设模块开关）
   │    ├─ include(module_config.cmake)  → 默认参数
-  │    └─ include(infantry3/robot.cmake) → 覆盖差异
+  │    └─ include(sentry/robot.cmake) → 覆盖差异
   │
   ├─ include(generate_headers.cmake) → 把 CMake 变量翻译成 C 宏
   │    ├─ file(WRITE robot_def.h)
@@ -84,8 +84,8 @@ _vscode/tasks.json
                   │   ├→ [[02_code_twin/apps/config-cmake]]
                   │   │   ├─ include(module_config.cmake)
                   │   │   │   └→ [[02_code_twin/modules/module_config-cmake]]
-                  │   │   └─ include(infantry3/robot.cmake)
-                  │   │       └→ [[02_code_twin/apps/infantry3/robot-cmake]]
+                  │   │   └─ include(sentry/robot.cmake)
+                  │   │       └→ [[02_code_twin/apps/sentry/robot-cmake]]
                   │   │
                   │   └─ include(generate_headers.cmake)
                   │       └→ [[02_code_twin/apps/generate_headers-cmake]]

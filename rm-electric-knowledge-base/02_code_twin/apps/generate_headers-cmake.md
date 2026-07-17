@@ -22,8 +22,8 @@ generate_headers.cmake           把变量翻译成 C 宏
   └→ file(WRITE) module_config.h    生成模块开关和参数宏
                                      ↓
 build/dji_c/Debug/generated/     产物目录
-  ├→ robot_def.h                    #define CURRENT_ROBOT ROBOT_INFANTRY3
-  └→ module_config.h                #define MODULE_REMOTE 1 ...
+  ├→ robot_def.h                    #define CURRENT_ROBOT ROBOT_SENTRY
+  └→ module_config.h                #define MODULE_VISION 1 ...
                                      ↓
 源代码 #include "module_config.h"   C 代码中使用宏
 ```
@@ -43,6 +43,8 @@ file(WRITE ${_generated_dir}/robot_def.h
 #define ROBOT_ENGINEER  2
 #define ROBOT_INFANTRY3 3
 ...
+#define ROBOT_SENTRY    7
+...
 #define CURRENT_ROBOT   ROBOT_${ROBOT_UPPER}
 
 #endif
@@ -51,10 +53,10 @@ file(WRITE ${_generated_dir}/robot_def.h
 
 - `file` → [[01_extracted/cmake/cmake-basic-syntax#file - 文件操作]]
 
-`file(WRITE 路径 内容)` 直接写文件。`${ROBOT_UPPER}` 在配置阶段被替换为 `INFANTRY3`，所以最终写入的文件内容是：
+`file(WRITE 路径 内容)` 直接写文件。`${ROBOT_UPPER}` 在配置阶段被替换为 `SENTRY`，所以最终写入的文件内容是：
 
 ```c
-#define CURRENT_ROBOT   ROBOT_INFANTRY3
+#define CURRENT_ROBOT   ROBOT_SENTRY
 ```
 
 ### _gen_cmakedefine 函数
@@ -94,27 +96,39 @@ file(WRITE ${_generated_dir}/module_config.h
 ...
 ${_REMOTE_UART}
 ${_REFEREE_UART}
+${_WT606_UART}
+${_BOARDCOMM_CAN}
 ...
 ")
 ```
 
-`${MODULE_OFFLINE}` 等变量在配置阶段被替换为 0 或 1，`${_REMOTE_UART}` 被 _gen_cmakedefine 生成的 `#define` 或 `/* #undef */` 替换。最终生成的文件类似：
+以 `sentry gimbal` 为例，`MODULES_GIMBAL` = `OFFLINE REMOTE BMI088 INS WT606 MOTOR VISION BOARDCOMM`，最终生成的文件类似：
 
 ```c
+#define SINGLE_BOARD  0
+#define GIMBAL_BOARD  1
+#define CHASSIS_BOARD 0
+
 #define MODULE_OFFLINE   1
 #define MODULE_REMOTE    1
 #define MODULE_BMI088    1
 #define MODULE_INS       1
-#define MODULE_REFEREE   1
-#define MODULE_SUPERCAP  1
+#define MODULE_REFEREE   0
+#define MODULE_SUPERCAP  0
+#define MODULE_WT606     1
 #define MODULE_MOTOR     1
 #define MODULE_VISION    1
-#define MODULE_WT606     0
-#define MODULE_BOARDCOMM 0
+#define MODULE_BOARDCOMM 1
 
 #define REMOTE_UART huart3
-#define REFEREE_UART huart6
+#define REMOTE_VT_UART huart6
+#define WT606_UART huart1
+#define BOARDCOMM_CAN BSP_CAN_HANDLE2
+/* #undef REFEREE_UART */
+/* #undef SUPERCAP_CAN */
 ...
 ```
+
+`REFEREE_UART` 和 `SUPERCAP_CAN` 被注释掉——因为 sentry gimbal 不启用 REFEREE 和 SUPERCAP 模块，对应的 UART/CAN 变量虽然在默认模板中定义了，但 `_gen_cmakedefine` 检测到模块未启用时不会生成 `#define`。
 
 这个头文件被 [[02_code_twin/modules/CMakeLists-txt]] 和 [[02_code_twin/apps/CMakeLists-txt]] 通过 `-include module_config.h` 强制注入到每个 `.c` 文件中。

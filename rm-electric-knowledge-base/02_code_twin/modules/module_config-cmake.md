@@ -6,7 +6,7 @@
 
 ## 作用
 
-被 [[02_code_twin/apps/config-cmake]] 和 [[02_code_twin/apps/infantry3/robot-cmake]] 通过 `include()` 加载。定义所有模块的默认参数和各板型的默认模块列表。是配置链的"基类"，robot.cmake 在此基础上覆盖差异项。
+被 [[02_code_twin/apps/config-cmake]] 和 [[02_code_twin/apps/sentry/robot-cmake]] 通过 `include()` 加载。定义所有模块的默认参数和各板型的默认模块列表。是配置链的"基类"，robot.cmake 在此基础上覆盖差异项。
 
 ---
 

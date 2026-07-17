@@ -19,11 +19,11 @@ set(_robot_base_dir ${CMAKE_CURRENT_SOURCE_DIR}/${ROBOT})
 set(_robot_board_dir ${_robot_base_dir}/${BOARD}_board)
 ```
 
-`ROBOT` 和 `BOARD` 来自 [[02_code_twin/apps/config-cmake]]。以 `infantry3 single` 为例：
+`ROBOT` 和 `BOARD` 来自 [[02_code_twin/apps/config-cmake]]。以 `sentry gimbal` 为例：
 
 ```
-_robot_base_dir  = apps/infantry3/
-_robot_board_dir = apps/infantry3/single_board/
+_robot_base_dir  = apps/sentry/
+_robot_board_dir = apps/sentry/gimbal_board/
 ```
 
 ### 自动收集源文件
@@ -35,7 +35,7 @@ if(EXISTS ${_robot_board_dir})
 endif()
 ```
 
-`file(GLOB_RECURSE)` 递归扫描 `apps/infantry3/single_board/` 下所有子目录的 `.c` 文件。往这个目录里加新文件不需要改 CMakeLists.txt。详见 [[01_extracted/cmake/cmake-basic-syntax#file(GLOB_RECURSE) - 递归扫描文件]]
+`file(GLOB_RECURSE)` 递归扫描 `apps/sentry/gimbal_board/` 下所有子目录的 `.c` 文件。往这个目录里加新文件不需要改 CMakeLists.txt。详见 [[01_extracted/cmake/cmake-basic-syntax#file(GLOB_RECURSE) - 递归扫描文件]]
 
 ### 自动收集头文件路径
 
@@ -48,7 +48,7 @@ if(EXISTS ${_robot_base_dir})
 endif()
 ```
 
-先把 `apps/infantry3/` 根目录加入头文件路径。这样不同板型（single_board / gimbal_board）之间可以共享 `infantry3_def.h` 这类公共头文件。
+先把 `apps/sentry/` 根目录加入头文件路径。这样不同板型（gimbal_board / chassis_board）之间可以共享 `sentry_def.h` 这类公共头文件。
 
 ```cmake
 if(EXISTS ${_robot_board_dir})
@@ -67,7 +67,7 @@ endif()
 - `list` → [[01_extracted/cmake/cmake-basic-syntax#list - 列表操作]]
 - `get_filename_component` → [[01_extracted/cmake/cmake-basic-syntax#get_filename_component - 提取路径组件]]
 
-再扫描 `single_board/` 下所有 `.h` 文件，提取每个文件所在目录加入头文件路径，最后 `list(REMOVE_DUPLICATES)` 去重。这样源码里 `#include "chassis.h"` 就能自动找到 `single_board/chassis/chassis.h` 所在的目录。
+再扫描 `gimbal_board/` 下所有 `.h` 文件，提取每个文件所在目录加入头文件路径，最后 `list(REMOVE_DUPLICATES)` 去重。这样源码里 `#include "gimbal_func.h"` 就能自动找到 `gimbal_board/gimbal_func/gimbal_func.h` 所在的目录。
 
 ### 建库
 
@@ -95,4 +95,4 @@ target_link_libraries(app PUBLIC stm32cubemx azrtos::threadx utils bsp CMSISDSP 
 
 `app_init.c` 是固定文件（所有机器人共用），`${_robot_sources}` 是自动收集的业务代码。和 modules 一样用 `-include module_config.h` 强制注入配置宏。
 
-链接了 `modules`——app 的业务代码调用 modules 提供的接口（电机控制、裁判系统通信等）。`PUBLIC` 传递，`base` 链接 app 后自动获得 modules 及其所有底层依赖。
+链接了 `modules`——app 的业务代码调用 modules 提供的接口（电机控制、视觉通信等）。`PUBLIC` 传递，`base` 链接 app 后自动获得 modules 及其所有底层依赖。
