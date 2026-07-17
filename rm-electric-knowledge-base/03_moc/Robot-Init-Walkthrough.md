@@ -19,13 +19,13 @@
 
 `board/bsp/` 是共享硬件抽象层，`board/dji_c/`（F407）和 `board/damiao_h7/`（H723）是两个板子的 CubeMX 工程。BSP 代码用 `#if defined(STM32F407xx)` / `#if defined(STM32H723xx)` 条件编译区分两套硬件。
 
-| 步骤 | 02 层链接 |
-|------|----------|
-| `BSP_DWT_Init(168/480)` | [[02_code_twin/board/bsp/DWT/bsp_dwt]] |
-| `cdc_acm_init()` | USB 虚拟串口 |
-| `BSP_LED_Init()` | [[02_code_twin/board/bsp/LED/bsp_led]] |
-| `BSP_BEEP_Init()` | [[02_code_twin/board/bsp/BEEP/bsp_beep]] |
-| `BSP_CAN_TaskInit()` | [[02_code_twin/board/bsp/CAN/bsp_can_task]] |
+| 步骤                      | 02 层链接                                      |     |
+| ----------------------- | ------------------------------------------- | --- |
+| `BSP_DWT_Init(168/480)` | [[02_code_twin/board/bsp/DWT/bsp_dwt]]      |     |
+| `cdc_acm_init()`        | USB 虚拟串口                                    |     |
+| `BSP_LED_Init()`        | [[02_code_twin/board/bsp/LED/bsp_led]]      |     |
+| `BSP_BEEP_Init()`       | [[02_code_twin/board/bsp/BEEP/bsp_beep]]    |     |
+| `BSP_CAN_TaskInit()`    | [[02_code_twin/board/bsp/CAN/bsp_can_task]] |     |
 
 ### 3. MODULE_Init()
 

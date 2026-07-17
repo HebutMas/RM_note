@@ -67,6 +67,7 @@ float BSP_DWT_GetDeltaT(uint32_t *cnt_last) {
 - **每个调用方各自维护自己的时间戳**，互不干扰
 - 多个模块同时调用 `GetDeltaT`，各自拿到的是自己两次调用之间的间隔
 - 如果 `cnt_last` 是 DWT 内部全局变量，那一个模块调用后会覆盖其他模块的时间戳，导致其他模块下次调用算出的 dt 是错的
+- `cnt_now - *cnt_last` 是无符号减法，即使 CYCCNT 溢出回卷也能算出正确的时间差，详见 [[01_extracted/algorithm/computer-basics#无符号整数回卷]]
 
 ### 使用示例
 
