@@ -41,14 +41,14 @@
 | `Module_WT606_Init()`     | 陀螺仪                                                                                                                                            |
 | `Module_SuperCap_Init()`  | 超级电容                                                                                                                                           |
 | `Module_Motor_Init()`     | [[02_code_twin/modules/MOTOR/motor_base]] — 2ms 循环，链表调度                                                                                        |
-| `Module_Vision_Init()`    | 视觉通信                                                                                                                                           |
+| `Module_Vision_Init()`    | [[02_code_twin/modules/VISION/module_vision]]                                                                                                  |
 | `Module_BoardComm_Init()` | 板间通信                                                                                                                                           |
 
 ### 4. APP_Init()
 
 源文件：`apps/app_init.c`
 
-`robot_control_init()` 的具体内容取决于 `config.cmake` 中的 `ROBOT` 变量，负责电机注册、遥控映射、控制线程创建。详见各 `apps/<robot>/` 目录。
+`robot_control_init()` 的具体内容取决于 `config.cmake` 中的 `ROBOT` 变量。当前以哨兵云台板为例：[[02_code_twin/apps/sentry/gimbal_board/robot_control]]
 
 ## MODULE_Init() 调用顺序
 
