@@ -33,6 +33,7 @@ status: draft
 9. [[#进阶主题|进阶主题]]
    - [[#91-git-lfs--大文件管理|9.1 Git LFS]]
    - [[#92-github-actions--自动构建与测试|9.2 GitHub Actions]]
+   - [[#93-gh-cli--命令行操作-github|9.3 gh CLI]]
    - [[#94-submodule--多仓库协同|9.4 Submodule]]
    - [[#95-release--tag--赛季版本管理|9.5 Release & Tag]]
    - [[#96-code-review-最佳实践|9.6 Code Review]]
@@ -113,6 +114,22 @@ cat ~/.ssh/id_ed25519.pub | xclip    # Linux
 #    粘贴公钥，Title 填 "我的笔记本" 或 "实验室主机"
 ```
 
+### 5. 配置终端代理（重要！）
+
+> **如果你用代理上网，这步必看。** Git 走终端，**不会自动使用系统代理**。不配的话 `git push` / `git clone` 会卡住或超时。
+
+```bash
+# 设置代理（端口默认7899，按你代理工具的实际端口改）
+git config --global http.proxy http://127.0.0.1:7899
+git config --global https.proxy http://127.0.0.1:7899
+
+# 取消代理
+git config --global --unset http.proxy
+git config --global --unset https.proxy
+```
+
+端口在你的代理工具（Clash / V2Ray 等）里找，常见 7890、7899、1080、10809。`git push` 卡在 `Connecting to github.com` 超时就是代理没配。
+
 ---
 
 ## Git 核心概念 ⇢ 一张图
@@ -167,17 +184,47 @@ git commit -m "feat: 底盘PID参数整定完成"
 git push
 ```
 
-### 多人协作（推荐工作流）
+> ⚠️ **写完一个功能就 commit，不要攒一天再提交！** 一个 commit 只做一件事——写完云台 PID 就 commit 一次，写完底盘功率再 commit 一次。这样出问题能精确回滚，Code Review 也看得过来。Commit message 用 `feat:` / `fix:` / `refactor:` 前缀，如 `feat: 云台PID角度环实现`。
 
-一句话概括：**从最新 main 拉分支 → 小步 commit → push → 开 PR → Review 合并 → 删分支**。
+### 多人协作 — Fork 模式
 
-```text
-clone → checkout -b → 写代码 → 小步 commit → push -u →
-  （main 更新了？→ fetch + merge/rebase → push）→
-  创建 PR → 合并 → 切回 main pull → 删除旧分支
+战队仓库是唯一的"权威源"，所有人**先 fork 到自己的 GitHub 账号**，日常开发推到自己的 fork 上，测试通过后再 PR 回主仓库。
+
+#### Fork + Clone
+
+```bash
+# 1. GitHub 网页上点 Fork，把战队仓库 fork 到自己账号下
+# 2. Clone 你自己的 fork（不是战队仓库！）
+git clone git@github.com:你的用户名/rm_control.git
+cd rm_control
+# 3. 添加战队仓库为 upstream
+git remote add upstream git@github.com:HebutMas/rm_control.git
 ```
 
-> 📖 **完整分步教程**（含每条命令、main 落后了怎么同步、merge vs rebase 抉择）见 [[#98-标准协作工作流--完整循环|§9.8 标准协作工作流]]。本节只给全景，不重复展开。
+#### 日常开发 — 推到自己的 fork
+
+```bash
+git checkout -b feature/云台PID调参
+# 写代码...写完一个功能就 commit...
+git add . && git commit -m "feat: 云台PID参数整定"
+git push -u origin feature/云台PID调参
+```
+
+#### 两人协作 — 互相拉
+
+两个人一起开发时不需要走 PR，直接从对方的 fork 拉：
+
+```bash
+git remote add teammate git@github.com:队友用户名/rm_control.git
+git fetch teammate
+git merge teammate/feature/云台PID调参
+```
+
+#### 多人协作 — PR 回主仓库
+
+测试好的分支向战队主仓库提 PR，Review 通过合并后同步 upstream 并删分支。
+
+> 📖 完整分步教程（含同步 upstream、merge vs rebase、冲突解决）见 [[#98-标准协作工作流--完整循环|§9.8 标准协作工作流]]。
 
 ---
 
@@ -554,6 +601,27 @@ jobs:
 | **免费额度**       | 公共仓库无限免费，私有仓库每月 2000 分钟（2024）                                  |
 
 > 💡 **战队最值得做的 CI**：编译检查 + 格式检查。两个 workflow 加起来不到 50 行 YAML，但能拦截 80% 的低级错误（忘提交文件、缩进混乱、编译不过）。
+
+---
+
+### 9.3 gh CLI — 命令行操作 GitHub
+
+`gh` 是 GitHub 官方命令行工具，不用开网页就能建 PR、看 Issue、管 Release。最实用的场景：代码 push 完了终端里一行命令直接建 PR。
+
+```bash
+# 安装
+winget install GitHub.cli   # Windows
+gh auth login               # 登录
+
+# 常用
+gh pr create --title "feat: 云台PID调参" --body "描述"  # 创建 PR
+gh pr list                                               # 列出 PR
+gh pr checkout 12                                        # 切到 #12 的分支
+gh pr merge 12 --squash --delete-branch                 # 合并并删分支
+gh repo fork HebutMas/rm_control                         # 一键 fork 并 clone
+```
+
+> 💡 知道有这个东西就行，用到的时候 `gh --help` 查命令。
 
 ---
 
