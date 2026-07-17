@@ -31,18 +31,18 @@
 
 源文件：`modules/module_init.c`
 
-| 步骤 | 02 层链接 |
-|------|----------|
-| `Module_Offline_init()` | [[02_code_twin/modules/OFFLINE/module_offline-c]] |
-| `Module_Remote_init()` | [[02_code_twin/modules/REMOTE/module_remote]] — SBUS: [[02_code_twin/modules/REMOTE/SBUS/sbus]] / DT7: [[02_code_twin/modules/REMOTE/DT7/dt7]] |
-| `Module_BMI088_init()` | IMU |
-| `Module_INS_Init()` | 姿态解算 |
-| `Module_Referee_Init()` | 裁判系统 |
-| `Module_WT606_Init()` | 陀螺仪 |
-| `Module_SuperCap_Init()` | 超级电容 |
-| `Module_Motor_Init()` | [[02_code_twin/modules/MOTOR/motor_base]] — 2ms 循环，链表调度 |
-| `Module_Vision_Init()` | 视觉通信 |
-| `Module_BoardComm_Init()` | 板间通信 |
+| 步骤                        | 02 层链接                                                                                                                                         |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Module_Offline_init()`   | [[02_code_twin/modules/OFFLINE/module_offline-c]]                                                                                              |
+| `Module_Remote_init()`    | [[02_code_twin/modules/REMOTE/module_remote]] — SBUS: [[02_code_twin/modules/REMOTE/SBUS/sbus]] / DT7: [[02_code_twin/modules/REMOTE/DT7/dt7]] |
+| `Module_BMI088_init()`    | IMU                                                                                                                                            |
+| `Module_INS_Init()`       | 姿态解算                                                                                                                                           |
+| `Module_Referee_Init()`   | 裁判系统                                                                                                                                           |
+| `Module_WT606_Init()`     | 陀螺仪                                                                                                                                            |
+| `Module_SuperCap_Init()`  | 超级电容                                                                                                                                           |
+| `Module_Motor_Init()`     | [[02_code_twin/modules/MOTOR/motor_base]] — 2ms 循环，链表调度                                                                                        |
+| `Module_Vision_Init()`    | 视觉通信                                                                                                                                           |
+| `Module_BoardComm_Init()` | 板间通信                                                                                                                                           |
 
 ### 4. APP_Init()
 
