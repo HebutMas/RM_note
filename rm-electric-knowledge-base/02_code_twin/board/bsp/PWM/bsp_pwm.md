@@ -92,7 +92,7 @@ BSP_PWM_SetDutyCycle(pwm_r, red_duty);    // 传百分比，内部自动换算
 
 ### 蜂鸣器：`BSP_PWM_SetPulse` — 关心"绝对 Pulse 值"
 
-F407 蜂鸣器挂在 TIM4，ARR=999（即 `Period=1000-1`）。蜂鸣器的 `BSP_BEEP_Set(psc, pwm)` 由 Offline 模块调用，传入的 `pwm` 参数是**直接控制音量的 Pulse 值**（0-999），不是百分比：
+F407 蜂鸣器挂在 **TIM4 Channel 3**，CubeMX 配置 PSC = 21-1 = 20，ARR = 1000-1 = 999（有效周期 = 1000）。蜂鸣器的 `BSP_BEEP_Set(psc, pwm)` 由 Offline 模块调用，传入的 `pwm` 参数是**直接写入 CCR 的 Pulse 值**：
 
 ```c
 // bsp_beep.c
@@ -102,9 +102,9 @@ void BSP_BEEP_Set(uint16_t psc, uint16_t pwm) {
 }
 ```
 
-原因是蜂鸣器音量控制不需要 0.1% 精度，Offline 模块直接算好了 Pulse 值传进来。用 `SetPulse` 跳过了 `duty → pulse` 的换算，少一层间接。
+因为 ARR 有效值 = 1000，**pulse 值刚好是占空比的 10 倍**：pulse = 100 → 占空比 10%，pulse = 500 → 50%。
 
-如果用 `SetDutyCycle` 也行（`pwm * 1000 / ARR` 换算一下），但多此一举——蜂鸣器的 ARR 固定 999，Offline 模块直接按 Pulse 来更直观。
+Offline 模块实际调用：F407 传 `BSP_BEEP_Set(50, 100)`，即 psc=50（控制音调），pulse=100（占空比 10%，控制音量）。`SetPulse` 本质是 `__HAL_TIM_SET_COMPARE` 直接写 CCR 寄存器，不经过 ARR 换算。如果用 `SetDutyCycle` 也行，但多此一举——ARR 固定 1000，直接按 Pulse 来更直观。
 
 ### 对比总结
 
@@ -113,7 +113,7 @@ void BSP_BEEP_Set(uint16_t psc, uint16_t pwm) {
 | 入参含义 | 占空比 0-1000（0.0%-100.0%） | Pulse 值 0-ARR |
 | 是否需要知道 ARR | 不需要 | 需要 |
 | 适用场景 | 需要跨平台移植、按比例控制 | 固定硬件、直接控制寄存器值 |
-| 定时器/ARR | TIM5, ARR=65535 | TIM4, ARR=999 |
+| 定时器/ARR | TIM5, ARR=65535 | TIM4 CH3, PSC=20, ARR=999（有效周期 1000）|
 
 ## 频率设置
 
