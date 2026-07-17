@@ -12,6 +12,9 @@
 |------|------|
 | `tx_byte_pool_create()` | 20KB ThreadX 字节内存池，后续所有 `BSP_MEM_ALLOC_WAIT` 依赖此池 |
 | `UTILS_Init()` | ulog 日志初始化 |
+| `BSP_Init()` | → 第 2 步 |
+| `MODULE_Init()` | → 第 3 步 |
+| `APP_Init()` | → 第 4 步，[[02_code_twin/apps/app_init]] |
 
 ### 2. BSP_Init()
 
@@ -46,9 +49,23 @@
 
 ### 4. APP_Init()
 
-源文件：`apps/app_init.c`
+源文件：`apps/app_init.c` → [[02_code_twin/apps/app_init]]
 
-`robot_control_init()` 的具体内容取决于 `config.cmake` 中的 `ROBOT` 变量。当前以哨兵云台板为例：[[02_code_twin/apps/sentry/gimbal_board/robot_control]]
+`APP_Init()` 本身只有一行 `robot_control_init()`，是一个转发点。`robot_control_init()` 的实现在各兵种各板型目录下，由 CMake 根据 `ROBOT` 和 `BOARD` 变量决定编译哪个版本。
+
+跳转链路：
+
+```
+Robot_Init()           robot/robot_init.c         ← 第 1 步，调用 APP_Init()
+  └─ APP_Init()        apps/app_init.c            ← 第 4 步，转发
+       └─ robot_control_init()
+            │  编译时由 config.cmake 的 ROBOT/BOARD 决定链接哪个 .c 文件
+            │
+            └─ 哨兵云台板: apps/sentry/gimbal_board/robot_control.c
+                 → [[02_code_twin/apps/sentry/gimbal_board/robot_control]]
+```
+
+当前以哨兵云台板为例：[[02_code_twin/apps/sentry/gimbal_board/robot_control]]
 
 ## MODULE_Init() 调用顺序
 
