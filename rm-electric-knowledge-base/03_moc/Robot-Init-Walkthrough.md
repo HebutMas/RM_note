@@ -81,14 +81,11 @@ Robot_Init()
 │   └── Module_BoardComm_Init()        板间通信
 └── APP_Init()
     └── robot_control_init()           CMake 按 ROBOT/BOARD 选编译哪个
-        ├── Module_INS_get()           获取 IMU 指针
-        ├── gimbal_init()
-        │   └── Motor_DJI_Init() ×2   small_yaw + big_yaw → 挂入电机链表
-        ├── shoot_init()
-        │   └── Motor_DJI_Init() ×3   friction_l + friction_r + loader → 挂入链表
-        ├── Module_BoardComm_RegisterRxBuffer()
-        └── tx_thread_create → robot_control_task
-            └── 2ms: RemoteControlSet → Vision → Gimbal → Shoot → BoardComm
+        ├─ ROBOT=sentry → [[03_moc/Sentry-Init]]
+        │   ├─ 云台板: gimbal+shoot+vision+boardcomm
+        │   └─ 底盘板: chassis+referee
+        └─ ROBOT=infantry3 → [[03_moc/Infantry3-Init]]
+            └─ 单板: gimbal+shoot+chassis, 无板间通信
 ```
 
 ## 各层初始化的详细展开
@@ -111,13 +108,13 @@ void UTILS_Init(void) {
 
 `board/bsp/` 是共享硬件抽象层，`board/dji_c/`（F407）和 `board/damiao_h7/`（H723）是两个板子的 CubeMX 工程。BSP 代码用 `#if defined(STM32F407xx)` / `#if defined(STM32H723xx)` 条件编译区分两套硬件。
 
-| 函数 | 02 层链接 |
-|------|---------|
-| `BSP_DWT_Init(168/480)` | [[02_code_twin/board/bsp/DWT/bsp_dwt]] |
-| `cdc_acm_init()` | [[02_code_twin/board/bsp/USB/bsp_usb_cdc]] |
-| `BSP_LED_Init()` | [[02_code_twin/board/bsp/LED/bsp_led]] |
-| `BSP_BEEP_Init()` | [[02_code_twin/board/bsp/BEEP/bsp_beep]] |
-| `BSP_CAN_TaskInit()` | [[02_code_twin/board/bsp/CAN/bsp_can_task]] |
+| 函数                      | 02 层链接                                      |
+| ----------------------- | ------------------------------------------- |
+| `BSP_DWT_Init(168/480)` | [[02_code_twin/board/bsp/DWT/bsp_dwt]]      |
+| `cdc_acm_init()`        | [[02_code_twin/board/bsp/USB/bsp_usb_cdc]]  |
+| `BSP_LED_Init()`        | [[02_code_twin/board/bsp/LED/bsp_led]]      |
+| `BSP_BEEP_Init()`       | [[02_code_twin/board/bsp/BEEP/bsp_beep]]    |
+| `BSP_CAN_TaskInit()`    | [[02_code_twin/board/bsp/CAN/bsp_can_task]] |
 
 其中 USB 虚拟串口初始化前有一段 PA12 拔插复位逻辑（模拟 USB 拔插强制主机重新枚举），详见 [[02_code_twin/board/bsp/USB/bsp_usb_cdc]]。
 
@@ -131,18 +128,18 @@ void UTILS_Init(void) {
 
 以哨兵云台板（`ROBOT=sentry BOARD=gimbal`）为例，启用的模块：
 
-| 函数 | 02 层链接 | 哨兵云台板 |
-|------|---------|:---:|
-| `Module_Offline_init()` | [[02_code_twin/modules/OFFLINE/module_offline-c]] | 启用 |
-| `Module_Remote_init()` | [[02_code_twin/modules/REMOTE/module_remote]] — SBUS: [[02_code_twin/modules/REMOTE/SBUS/sbus]] / DT7: [[02_code_twin/modules/REMOTE/DT7/dt7]] | 启用 |
-| `Module_BMI088_init()` | IMU 驱动 | 启用 |
-| `Module_INS_Init()` | 姿态解算 | 启用 |
-| `Module_Referee_Init()` | 裁判系统 | 未启用 |
-| `Module_WT606_Init()` | 陀螺仪 | 启用 |
-| `Module_SuperCap_Init()` | 超级电容 | 未启用 |
-| `Module_Motor_Init()` | [[02_code_twin/modules/MOTOR/motor_base]] | 启用 |
-| `Module_Vision_Init()` | [[02_code_twin/modules/VISION/module_vision]] | 启用 |
-| `Module_BoardComm_Init()` | 板间通信 | 启用 |
+| 函数                        | 02 层链接                                                                                                                                         | 哨兵云台板 |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | :---: |
+| `Module_Offline_init()`   | [[02_code_twin/modules/OFFLINE/module_offline-c]]                                                                                              |  启用   |
+| `Module_Remote_init()`    | [[02_code_twin/modules/REMOTE/module_remote]] — SBUS: [[02_code_twin/modules/REMOTE/SBUS/sbus]] / DT7: [[02_code_twin/modules/REMOTE/DT7/dt7]] |  启用   |
+| `Module_BMI088_init()`    | IMU 驱动                                                                                                                                         |  启用   |
+| `Module_INS_Init()`       | 姿态解算                                                                                                                                           |  启用   |
+| `Module_Referee_Init()`   | 裁判系统                                                                                                                                           |  未启用  |
+| `Module_WT606_Init()`     | 陀螺仪                                                                                                                                            |  启用   |
+| `Module_SuperCap_Init()`  | 超级电容                                                                                                                                           |  未启用  |
+| `Module_Motor_Init()`     | [[02_code_twin/modules/MOTOR/motor_base]]                                                                                                      |  启用   |
+| `Module_Vision_Init()`    | [[02_code_twin/modules/VISION/module_vision]]                                                                                                  |  启用   |
+| `Module_BoardComm_Init()` | 板间通信                                                                                                                                           |  启用   |
 
 #### Module_Motor_Init() — 线程先建，电机后注册
 
@@ -189,19 +186,17 @@ APP_Init()              apps/app_init.c
   └─ robot_control_init()
        │  CMake 按 ROBOT/BOARD 选编译哪个 .c
        │
-       └─ 哨兵云台板: apps/sentry/gimbal_board/robot_control.c
-            → [[02_code_twin/apps/sentry/gimbal_board/robot_control]]
+       ├─ ROBOT=sentry → 哨兵（双板：云台板 + 底盘板）
+       │    → [[03_moc/Sentry-Init]]
+       │
+       └─ ROBOT=infantry3 → 步兵3号（单板）
+            → [[03_moc/Infantry3-Init]]
 ```
 
-哨兵云台板的 `robot_control_init()` 做了 4 件事：
+哨兵和步兵3号的完整初始化流程（电机注册、2ms 循环、子模块链接）分别展开在：
 
-| 步骤 | 做了什么 | 说明 |
-|------|---------|------|
-| `Module_INS_get()` | 获取 IMU 指针 | 后续每帧读 `ins->q[0..3]` 四元数 |
-| `gimbal_init()` | `Motor_DJI_Init()` ×2 | small_yaw + big_yaw 挂入电机链表 |
-| `shoot_init()` | `Motor_DJI_Init()` ×3 | friction_l + friction_r + loader 挂入链表 |
-| `Module_BoardComm_RegisterRxBuffer()` | 注册板间通信接收缓冲区 | 底盘板传裁判系统数据过来 |
-| `tx_thread_create` | 创建 2ms 控制线程 | `TX_AUTO_START` 自动启动 |
+- **哨兵**：[[03_moc/Sentry-Init]] — 双板架构，云台板管 gimbal+shoot+视觉+板间通信，底盘板管 chassis+裁判系统回传
+- **步兵3号**：[[03_moc/Infantry3-Init]] — 单板架构，gimbal+shoot+chassis 全在一块板，无板间通信
 
 至此电机链表填充完毕，motor task 的 2ms 循环开始真正控制电机，robot_control_task 的 2ms 循环开始执行控制逻辑。
 

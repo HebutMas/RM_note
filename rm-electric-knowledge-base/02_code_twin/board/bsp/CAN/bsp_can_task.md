@@ -31,6 +31,8 @@ while (1) {
 }
 ```
 
+CAN 设备注册与中断回调注册见 [[02_code_twin/board/bsp/CAN/bsp_can]]。
+
 kfifo 的 SPSC 保证此处的线程安全：中断写、RX Task 读，详见 [[01_extracted/algorithm/kfifo-design#SPSC 架构]]。
 
 ## TX Task

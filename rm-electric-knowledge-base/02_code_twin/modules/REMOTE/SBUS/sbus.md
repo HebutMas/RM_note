@@ -34,7 +34,7 @@ UART_Device_init_config uart_cfg = {
 };
 ```
 
-`REMOTE_UART` 默认是 `huart5`，在 `module_remote.h` 中定义，可被 `module_config.h` 覆盖。
+`REMOTE_UART` 默认是 `huart5`，在 `module_remote.h` 中定义，可被 `module_config.h` 覆盖。对应板载 DBUS 接口，详见 [[01_extracted/hardware/c-board-resources#DBUS 接口]]。串口底层驱动见 [[02_code_twin/board/bsp/UART/bsp_uart]]。
 
 串口参数 100kbps + 偶校验 + 2 停止位，协议详见 [[01_extracted/remote/remote_protocol#SBUS（Futaba）]]。
 
