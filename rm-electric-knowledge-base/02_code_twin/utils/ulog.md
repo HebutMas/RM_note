@@ -41,6 +41,15 @@ LOG_ASSERT(ptr != NULL);                          // 断言失败后死循环
 
 打开后即可实时看到 `LOG_I` / `LOG_W` / `LOG_E` 输出的日志。
 
+![Ozone Terminal 日志输出示例](../../04_notes/images/ozone-terminal-log-example.png)
+
+上图是 test-app 分支运行 BMI088 异常检测程序时的实际日志输出。可以看到每条日志包含时间戳、模块标签、线程名和消息内容，例如：
+
+```
+[0.011] app_robot_control Pre-Init: BMI088 + INS ready, monitoring for anomalies...
+[0.013] app_robot_control robot_control_thread: Baseline accel: [ 0.128 -0.154  9.821]  gNorm=9.8228
+```
+
 > **注意**：日志系统通过 SEGGER RTT 输出，要求 J-Link 已连接且 Ozone 处于运行状态。
 
 ---
