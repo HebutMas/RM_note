@@ -93,7 +93,11 @@ if (feedback_reverse_flag == 1)            // pitch 电机 = 1
 Motor_DM_SetRef(pitch_motor, gimbal_cmd->pitch * DEGREE_2_RAD);
 ```
 
-`gimbal_cmd->pitch` 来自遥控器/视觉输入。遥控器的 pitch 通道方向已经按照"推杆=低头"来设计，和电机的正方向一致。所以 ref 进入 LQR 时符号已经正确，不需要再取反。
+`gimbal_cmd->pitch` 来自遥控器/视觉输入。
+
+> **理论推导（待代码验证）**：遥控器往上推 → pitch ref 值增加。pitch 轴向上为正（抬头 = 电机正方向），且 feedback 已取反对齐到电机坐标系，所以往前推时 P 轴是上仰的，ref 符号在更上层已经正确，因此 `motor_reverse_flag = 0`（ref 不取反）。
+>
+> 实际代码中遥控器通道的映射方式尚未确认，以上仅为理论分析。
 
 总结三个 flag 的分工：
 
