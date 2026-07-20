@@ -42,7 +42,7 @@ while (1) {
 ```
 
 
-> 完整信号流图见 [[02_code_twin/apps/infantry3/signal-flow]]。
+> 完整信号流图见 [[02_code_twin/apps/infantry3/信号流图]]。
 
 ## 链接
 

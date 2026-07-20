@@ -74,6 +74,6 @@ int16_t CalcOffsetAngle(float getyawangle) {
 
 ## 链接
 
-- 遥控器协议：[[01_extracted/remote/remote_protocol]]
+- 遥控器协议：[[01_extracted/remote/遥控器协议]]
 - SBUS 解码：[[02_code_twin/modules/REMOTE/SBUS/sbus]]
 - 应用层调用：[[02_code_twin/apps/sentry/gimbal_board/robot_control]]

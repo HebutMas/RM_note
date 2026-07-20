@@ -25,7 +25,7 @@
 | 波特率 | 100000 | 100000（相同） |
 | UART 设备 | 同一套 `BSP_UART_Device_Init` | 同一套 |
 
-串口参数 100kbps + 偶校验 + 1 停止位（SBUS 是 2 停止位），协议详见 [[01_extracted/remote/remote_protocol#DBUS（大疆 DT7+DR16）]]。
+串口参数 100kbps + 偶校验 + 1 停止位（SBUS 是 2 停止位），协议详见 [[01_extracted/remote/遥控器协议#DBUS（大疆 DT7+DR16）]]。
 
 离线检测注册见 [[02_code_twin/modules/OFFLINE/module_offline-c#Module_Offline_register()]]。
 
@@ -47,11 +47,11 @@ if (ch1 < DT7_CH_VALUE_MIN || ch1 > DT7_CH_VALUE_MAX ||
     continue;  // 超范围 → 不是有效帧，跳过
 ```
 
-`DT7_CH_VALUE_MIN (364)` / `DT7_CH_VALUE_MAX (1684)` 来自 [[01_extracted/remote/remote_protocol#数值范围]]。4 个通道值全部在合法范围内才认为找到帧。
+`DT7_CH_VALUE_MIN (364)` / `DT7_CH_VALUE_MAX (1684)` 来自 [[01_extracted/remote/遥控器协议#数值范围]]。4 个通道值全部在合法范围内才认为找到帧。
 
 ### 通道解码
 
-和 SBUS 完全相同的 11bit 位运算，因为 DBUS 和 SBUS 的通道编码方式相同 [[01_extracted/remote/remote_protocol#字节→位解析]]：
+和 SBUS 完全相同的 11bit 位运算，因为 DBUS 和 SBUS 的通道编码方式相同 [[01_extracted/remote/遥控器协议#字节→位解析]]：
 
 ```c
 int16_t ch1 = (buf[i] | buf[i + 1] << 8) & 0x07FF;
@@ -85,7 +85,7 @@ if (abs(data->channels[0]) <= REMOTE_DEAD_ZONE) data->channels[0] = 0;  // ±10 
 
 减偏移后的值范围：`364-1024 = -660` ~ `1684-1024 = +660`。
 
-通道与物理操控的对应关系见 [[01_extracted/remote/remote_protocol#通道映射（DBUS / DT7）]]。
+通道与物理操控的对应关系见 [[01_extracted/remote/遥控器协议#通道映射（DBUS / DT7）]]。
 
 **拨杆开关 S1/S2 —— 离散量，不减偏移、不做死区**
 
@@ -103,7 +103,7 @@ data->dt7.sw1 = ((buf[i + 5] >> 4) & 0x000C) >> 2;  // bit 44-45
 data->dt7.sw2 = (buf[i + 5] >> 4) & 0x0003;          // bit 46-47
 ```
 
-2bit 开关值：1=上，3=中，2=下。位偏移来自 [[01_extracted/remote/remote_protocol#18 字节帧结构]]。
+2bit 开关值：1=上，3=中，2=下。位偏移来自 [[01_extracted/remote/遥控器协议#18 字节帧结构]]。
 
 ### 鼠标/键盘（条件编译）
 
@@ -117,7 +117,7 @@ data->dt7.sw2 = (buf[i + 5] >> 4) & 0x0003;          // bit 46-47
 
 只有 `REMOTE_VT_SOURCE == 0`（无外部图传）时才解析键鼠，因为接了 VT02/VT03 图传后键鼠数据从图传通道获取。
 
-按键位映射见 [[01_extracted/remote/remote_protocol#按键位映射（偏移 112，长度 16bit）]]。
+按键位映射见 [[01_extracted/remote/遥控器协议#按键位映射（偏移 112，长度 16bit）]]。
 
 ### 滚轮
 

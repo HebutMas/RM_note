@@ -20,7 +20,7 @@
 | sw2 | 底盘模式 | 三档开关 |
 | wheel | 拨盘控制 | 滚轮（正/零/负） |
 
-与哨兵的区别：步兵3号用 **DT7** 遥控器（sw1/sw2 + 摇杆 + 滚轮），哨兵用 **SBUS** 遥控器（CH1-8 四摇杆 + 四开关）。详见 [[01_extracted/remote/remote_protocol]]。
+与哨兵的区别：步兵3号用 **DT7** 遥控器（sw1/sw2 + 摇杆 + 滚轮），哨兵用 **SBUS** 遥控器（CH1-8 四摇杆 + 四开关）。详见 [[01_extracted/remote/遥控器协议]]。
 
 ### sw2（底盘模式）
 
@@ -56,7 +56,7 @@
 
 ## 链接
 
-- 遥控器协议：[[01_extracted/remote/remote_protocol]]
+- 遥控器协议：[[01_extracted/remote/遥控器协议]]
 - DT7 解码：[[02_code_twin/modules/REMOTE/DT7/dt7]]
 - 哨兵对照（SBUS）：[[02_code_twin/apps/sentry/gimbal_board/robot_func/robot_func]]
 - 应用层调用：[[02_code_twin/apps/infantry3/single_board/robot_control]]

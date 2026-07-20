@@ -39,7 +39,7 @@ typedef struct {
 #define DT7_CH_VALUE_MAX 1684    // DT7 最大值
 ```
 
-数值来源见 [[01_extracted/remote/remote_protocol#数值范围]]。
+数值来源见 [[01_extracted/remote/遥控器协议#数值范围]]。
 
 ## 初始化：`Module_Remote_init()`
 

@@ -36,7 +36,7 @@ UART_Device_init_config uart_cfg = {
 
 `REMOTE_UART` 默认是 `huart5`，在 `module_remote.h` 中定义，可被 `module_config.h` 覆盖。对应板载 DBUS 接口，详见 [[01_extracted/hardware/c-board-resources#DBUS 接口]]。串口底层驱动见 [[02_code_twin/board/bsp/UART/bsp_uart]]。
 
-串口参数 100kbps + 偶校验 + 2 停止位，协议详见 [[01_extracted/remote/remote_protocol#SBUS（Futaba）]]。
+串口参数 100kbps + 偶校验 + 2 停止位，协议详见 [[01_extracted/remote/遥控器协议#SBUS（Futaba）]]。
 
 离线检测 `beep_times = 0` 表示静默故障（红灯常亮不响蜂鸣），注册流程见 [[02_code_twin/modules/OFFLINE/module_offline-c#Module_Offline_register()]]。
 
@@ -64,7 +64,7 @@ for (uint32_t i = 0; i + SBUS_FRAME_SIZE - 1 < rx_len; i++) {
 int16_t ch1 = ((int16_t)buf[i + 1] >> 0 | ((int16_t)buf[i + 2] << 8)) & 0x07FF;
 ```
 
-位运算对应协议帧结构 [[01_extracted/remote/remote_protocol#通道→字节位映射]]：CH0 占用 buf[1] 全部 8bit + buf[2] 低 3bit，`& 0x07FF` 取低 11 位。
+位运算对应协议帧结构 [[01_extracted/remote/遥控器协议#通道→字节位映射]]：CH0 占用 buf[1] 全部 8bit + buf[2] 低 3bit，`& 0x07FF` 取低 11 位。
 
 ch2 跨 3 个字节（因为 11×3=33，偏移 33bit 落在 buf[3] 的第 2 位开始）：
 
@@ -97,7 +97,7 @@ if (abs(ch1) <= REMOTE_DEAD_ZONE) ch1 = 0;         // ±10 以内归零
 
 减偏移后的值范围：`240-1024 = -784` ~ `1807-1024 = +783`，使用时除以 `SBUS_CHX_DOWN - SBUS_CHX_BIAS`（783）归一化到 -1.0~+1.0。
 
-通道与物理操控的对应关系见 [[01_extracted/remote/remote_protocol#通道映射（SBUS / 通用遥控器）]]。
+通道与物理操控的对应关系见 [[01_extracted/remote/遥控器协议#通道映射（SBUS / 通用遥控器）]]。
 
 **CH5~CH16（开关/旋钮通道）—— 原始值，不减偏移、不做死区**
 
@@ -131,7 +131,7 @@ if (buf[i + 23] == 0x00) {
 }
 ```
 
-字节 23 是 flags 标志位 [[01_extracted/remote/remote_protocol#flags 标志位（字节 23）]]。`0x00` 表示无帧丢失、无失控保护，此时更新心跳。如果 bit4 或 bit5 置位（失控保护/帧丢失），不更新心跳，触发离线超时。
+字节 23 是 flags 标志位 [[01_extracted/remote/遥控器协议#flags 标志位（字节 23）]]。`0x00` 表示无帧丢失、无失控保护，此时更新心跳。如果 bit4 或 bit5 置位（失控保护/帧丢失），不更新心跳，触发离线超时。
 
 ## 数据写入
 

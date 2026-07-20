@@ -39,7 +39,7 @@
 | 运行时初始化 | [[03_moc/Robot-Init-Walkthrough]] | main()→ThreadX→Robot_Init()→各模块初始化 |
 | 哨兵初始化详解 | [[03_moc/Sentry-Init]] | 哨兵双板（云台板+底盘板）各自展开 |
 | 步兵3号初始化详解 | [[03_moc/Infantry3-Init]] | 步兵3号单板展开 |
-| 踩坑记录 | [[04_notes/env_pitfalls]] | 环境配置与编译问题 |
+| 踩坑记录 | [[04_notes/环境踩坑]] | 环境配置与编译问题 |
 
 ---
 
@@ -63,9 +63,9 @@
 | `apps/` | app_init, config-cmake, CMakeLists-txt, generate_headers-cmake | 应用层 CMake + 转发层 |
 | `apps/sentry/gimbal_board/` | robot_control, gimbal_func/, shoot_func/, robot_func/ | 哨兵云台板全部应用层 |
 | `apps/sentry/chassis_board/` | robot_control, chassis_func/, robot_func/ | 哨兵底盘板全部应用层 |
-| `apps/sentry/` | robot-cmake, signal-flow | 哨兵 CMake 对比 + 信号流图 |
+| `apps/sentry/` | robot-cmake, 信号流图 | 哨兵 CMake 对比 + 信号流图 |
 | `apps/infantry3/single_board/` | robot_control, gimbal_func/, shoot_func/, chassis_func/, robot_func/ | 步兵3号全部应用层 |
-| `apps/infantry3/` | signal-flow | 步兵3号信号流图 |
+| `apps/infantry3/` | 信号流图 | 步兵3号信号流图 |
 | CMake 相关 | board/dji_c/ 下 4 个, modules/, robot/, utils/, build | 构建系统全链路 |
 
 ### 尚未覆盖

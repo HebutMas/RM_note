@@ -97,7 +97,7 @@ struct Can_Device {
 };
 ```
 
-`rx_callback` 是函数指针：设备注册时填入自己的解析函数。CAN RX Task 收到数据后通过这个回调把数据交给设备处理。函数指针原理见 [[01_extracted/algorithm/function-pointer-pattern]]。
+`rx_callback` 是函数指针：设备注册时填入自己的解析函数。CAN RX Task 收到数据后通过这个回调把数据交给设备处理。函数指针原理见 [[01_extracted/algorithm/函数指针]]。
 
 `user_arg` 是回调上下文：注册时存入（比如电机指针），回调时取回，这样回调函数知道该把数据写进哪个实例。大疆电机注册示例见 [[02_code_twin/modules/MOTOR/DJI/motor_dji#CAN 接收回调]]。
 

@@ -80,7 +80,7 @@ typedef struct {
 } DM_Motor_t;
 ```
 
-> `base` 在第一个字段，使得 `&motor->base` 和 `motor` 地址相同。`MOTOR_GET_DERIVED` 宏利用这一点把基类指针强转回派生类指针。原理见 [[01_extracted/algorithm/function-pointer-pattern#基类指针还原派生类]]。
+> `base` 在第一个字段，使得 `&motor->base` 和 `motor` 地址相同。`MOTOR_GET_DERIVED` 宏利用这一点把基类指针强转回派生类指针。原理见 [[01_extracted/algorithm/函数指针#基类指针还原派生类]]。
 
 ## 子类初始化：注册到链表
 
@@ -146,7 +146,7 @@ void Motor_UpdateAll(void) {
 - 大疆电机 → 走 `dji_control`（详见 [[02_code_twin/modules/MOTOR/DJI/motor_dji]]）：计算 PID/LQR → 力矩转电流 → 填入静态发送缓冲区（不实际发送）
 - 达妙电机 → 走 `dm_ControlAndSend`（详见 [[02_code_twin/modules/MOTOR/DAMIAO/motor_damiao]]）：计算 PID/LQR → MIT 模式打包 → 直接 `BSP_CAN_SendMessage` 发送
 
-函数指针多态原理见 [[01_extracted/algorithm/function-pointer-pattern]]。
+函数指针多态原理见 [[01_extracted/algorithm/函数指针]]。
 
 ## 运行时：`motor_task_entry` 2ms 循环
 

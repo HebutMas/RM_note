@@ -78,7 +78,7 @@ while (1) {
   │   (color/hp/heat/bullet)      │
 ```
 
-> 完整信号流图见 [[02_code_twin/apps/sentry/signal-flow]]。
+> 完整信号流图见 [[02_code_twin/apps/sentry/信号流图]]。
 
 ## 链接
 

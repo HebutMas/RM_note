@@ -1,6 +1,6 @@
 # SBUS 遥控器使用经验
 
-> 本文为实操经验，非协议提炼。协议参数见 [[01_extracted/remote/remote_protocol]]。
+> 本文为实操经验，非协议提炼。协议参数见 [[01_extracted/remote/遥控器协议]]。
 
 ---
 
