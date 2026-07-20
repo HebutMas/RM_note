@@ -290,7 +290,7 @@ M3508 的映射参数：
 
 ## 链接
 
-- 麦轮运动学公式：[[01_extracted/algorithm/chassis-kinematics]]（待建）
+- 麦轮运动学公式：[[01_extracted/algorithm/chassis-kinematics]]
 - 云台反馈取反：[[02_code_twin/apps/infantry3/single_board/gimbal_func/gimbal_func#pitch 的 feedback_reverse_flag = 1：把反馈掰到电机轴]]
 - DJI 电机驱动：[[02_code_twin/modules/MOTOR/DJI/motor_dji]]
 - 电机基类：[[02_code_twin/modules/MOTOR/motor_base]]
