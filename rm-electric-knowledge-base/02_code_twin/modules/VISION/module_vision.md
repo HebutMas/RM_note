@@ -2,6 +2,13 @@
 
 `modules/VISION/module_vision.{c,h}`
 
+## 前置阅读
+
+视觉模块通过 USB CDC 虚拟串口与上位机通信——收发都用 `cdc_acm_recv` / `cdc_acm_send`，底层是 USB 而非硬件 UART。
+
+> 建议先读 [[02_code_twin/board/bsp/USB/bsp_usb_cdc]]，了解 USB CDC 设备抽象、端点收发机制和阻塞式读写接口。看完再回来这里看视觉模块怎么在 USB 之上做帧同步和收发。
+
+
 ## 通信包结构
 
 两个 `#pragma pack(1)` 紧凑结构体，二进制直接收发。先看清楚发什么、收什么，后面的收发逻辑才有意义。
@@ -61,10 +68,6 @@ typedef struct {
 不加 `#pragma pack(1)`，编译器会在 `uint8_t` 后面插填充字节对齐到 4 字节边界。比如 `header`(1B) 后面会有 3 字节填充，然后才是 `float`。这样 `sizeof(SendPacket)` = 24 而不是 19，`memcpy` 取出来的数据和 USB 字节流对不上。
 
 `#pragma pack(1)` 取消所有填充，结构体内存布局和通信字节流一一对应。
-
-### 为什么没有 CRC
-
-视觉数据是连续流——2ms 一帧，丢一帧等下一帧即可。加 CRC 增加每帧计算开销和通信字节，不值得。帧头帧尾已经能过滤绝大多数错误数据。
 
 ## 初始化
 
