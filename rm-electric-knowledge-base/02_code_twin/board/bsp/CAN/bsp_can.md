@@ -39,10 +39,10 @@ typedef struct {
 
 `CAN_Bus_Manager` 是一条 CAN 总线的完整软件抽象，管理三样东西：
 
-| 管理对象 | 字段 | 说明 |
-|---------|------|------|
-| 硬件 | `hcan` | 指向 `hcan1` / `hcan2`，区分物理总线 |
-| 设备表 | `devices[8]` | 数组槽位，按 `rx_id` 查找设备，见下方 Can_Device |
+| 管理对象 | 字段                    | 说明                                  |
+| ---- | --------------------- | ----------------------------------- |
+| 硬件   | `hcan`                | 指向 `hcan1` / `hcan2`，区分物理总线         |
+| 设备表  | `devices[8]`          | 数组槽位，按 `rx_id` 查找设备，见下方 Can_Device  |
 | 数据通道 | `rx_fifo` / `tx_fifo` | kfifo 软件缓冲，收发各一套，元素是 `BSP_CanMsg_t` |
 
 `rx_fifo` 是严格 SPSC：中断（唯一生产者）put，RX Task（唯一消费者）get。`tx_fifo` 的生产者不唯一，依赖定时调度避免并发。kfifo 原理见 [[01_extracted/algorithm/kfifo-design#SPSC 架构]]。
@@ -130,8 +130,6 @@ kfifo_init(&bus->rx_fifo, bus->rx_fifo_buf, BSP_CAN_RX_FIFO_SIZE, sizeof(BSP_Can
 
 在 `BSP_Init()` 阶段调用。创建两个信号量 + 两个线程（RX Task 优先级 3，TX Task 优先级 4），负责从 kfifo 取消息并分发/发送。
 
-必须在 `BSP_CAN_Device_Init()` 之前调用，因为设备注册时需要总线已初始化（kfifo + 中断已启动）。
-
 任务详情见 [[02_code_twin/board/bsp/CAN/bsp_can_task]]。
 
 ## 初始化：`BSP_CAN_Device_Init()`
@@ -148,31 +146,15 @@ kfifo_init(&bus->rx_fifo, bus->rx_fifo_buf, BSP_CAN_RX_FIFO_SIZE, sizeof(BSP_Can
 
 内存分配和注册模式见 [[01_extracted/algorithm/data-structure-linked-list#注册 = 分配 + 填充 + 头插]]。
 
-## 数据流：接收
+## 数据流
 
-中断收到 CAN 帧 → 打包成 `BSP_CanMsg_t` → `kfifo_put` 入 rx_fifo → `tx_semaphore_put` 通知 RX Task → RX Task `kfifo_get` 取出 → `can_dev_find` 查表 → `rx_callback` 分发到设备。
+收发数据流（中断怎么 put kfifo + 信号量、Task 怎么 get 消费、完整链路图）见 [[02_code_twin/board/bsp/CAN/bsp_can_task]]。
 
-中断只做三件事：取硬件 FIFO → 打包 → 入软件 rx_fifo + 发信号量。解析数据（拆字节、写电机 measure、更新心跳）放到 RX Task 里做。详见 [[02_code_twin/board/bsp/CAN/bsp_can_task]]。
-
-回调链路示例：`rx_callback(dev, msg.data, msg.len)` → 大疆电机的 `dji_can_rx_callback`，把 data 拆成编码器值/转速/电流/温度写入电机 measure，然后更新离线心跳。详见 [[02_code_twin/modules/MOTOR/DJI/motor_dji#CAN 接收回调]]。
-
-## 数据流：发送
-
-调用方（电机任务、板间通信等）调 `BSP_CAN_Send()` / `BSP_CAN_SendMessage()` → 打包成 `BSP_CanMsg_t` → `kfifo_put` 入 tx_fifo → `tx_semaphore_put` 通知 TX Task → TX Task `kfifo_get` 取出 → 调 HAL 发送。
-
-tx_fifo 满时丢弃最老消息，保证最新数据总能入队。TX Task 邮箱满时 `tx_thread_sleep(1)` 等待。详见 [[02_code_twin/board/bsp/CAN/bsp_can_task]]。
-
-## 发送端多生产者问题
-
-> **注意**：tx_fifo 的生产者不唯一。电机任务、板间通信、超级电容等都会调 `BSP_CAN_Send` / `BSP_CAN_SendMessage` 往同一条总线的 tx_fifo 写。kfifo 的无锁安全性依赖 SPSC 前提，多生产者并发写可能丢数据。代码中没有加锁保护，当前依赖各任务的触发都是统一遵循定时调度，调度后从高优先级往低优先级依次运行的时序，避免实际并发。
+发送端多生产者问题（tx_fifo 多线程写入的无锁安全性分析）也一并移到了那边。
 
 ## F407 过滤器配置
 
 每个设备注册时分配一个过滤器 Bank，精确匹配该设备的 `rx_id`。配置原理和寄存器映射详见 [[01_extracted/hardware/can-filter]]。
-
-## 信号量 vs 事件组
-
-CAN 用两个全局信号量（`g_can_rx_sem` / `g_can_tx_sem`），不是事件组。因为 RX/TX Task 各只有一个，信号量的计数特性正好匹配：多次中断多次 put，Task 逐个 get。
 
 ## 总线容量分析
 
