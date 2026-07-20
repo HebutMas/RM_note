@@ -102,6 +102,8 @@ void UTILS_Init(void) {
 
 日志系统初始化，后续所有模块的 `LOG_I` / `LOG_E` 依赖此函数。
 
+> 详见 [[../../02_code_twin/utils/ulog]]。
+
 ### BSP_Init()
 
 `board/bsp/bsp_init.c`
@@ -115,6 +117,7 @@ void UTILS_Init(void) {
 | `BSP_LED_Init()`        | [[02_code_twin/board/bsp/LED/bsp_led]]      |
 | `BSP_BEEP_Init()`       | [[02_code_twin/board/bsp/BEEP/bsp_beep]]    |
 | `BSP_CAN_TaskInit()`    | [[02_code_twin/board/bsp/CAN/bsp_can_task]] |
+| 日志系统（ulog）已就绪       | [[../../02_code_twin/utils/ulog]]（UTILS_Init 中初始化） |
 
 其中 USB 虚拟串口初始化前有一段 PA12 拔插复位逻辑（模拟 USB 拔插强制主机重新枚举），详见 [[02_code_twin/board/bsp/USB/bsp_usb_cdc]]。
 
