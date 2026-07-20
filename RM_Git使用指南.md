@@ -40,7 +40,6 @@ status: draft
 > 🔗 **关联笔记**（知识库 `rm-electric-knowledge-base/` 下）：
 > - `[[04_notes/pitfalls]]` — 踩坑记录与解决方案
 > - `[[04_notes/env_pitfalls]]` — 环境配置踩坑
-> - `[[04_notes/changelog]]` — 变更日志
 
 ---
 
