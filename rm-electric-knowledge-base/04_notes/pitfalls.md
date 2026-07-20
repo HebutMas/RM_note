@@ -1,12 +1,12 @@
 # 踩坑记录
 
 > 持续追加。格式：`### 日期 - 问题`，记录问题现象、原因、解决方法。
->
-> **日志系统使用**：如需了解 ulog 日志系统的 API 用法和 Ozone Terminal 查看方式，见 [[../../02_code_twin/utils/ulog]]。
 
 ---
 
 ### 2026-07-18 - AI 辅助 Flash PGSERR 调试
+
+> **日志系统使用**：本次调试全程依赖日志插桩，ulog 系统的 API 用法和 Ozone Terminal 查看方式见 [[../../02_code_twin/utils/ulog]]。
 
 **问题现象**：BMI088 标定时调用 `BSP_FLASH_Write_Buffer` 写入扇区 11 失败，`FLASH->SR = 0xC0`（PGSERR + PGPERR），HAL 返回 `HAL_ERROR`。但调度器启动后的测试线程里同样的写操作却能成功。
 
