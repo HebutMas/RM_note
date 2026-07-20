@@ -39,6 +39,28 @@ typedef struct {
 
 两个 `SPI_Device *` 指针——加速度计和陀螺仪各有独立的 SPI 设备句柄，对应各自的 CS 引脚。这是 BMI088 两个独立芯片在代码上的直接体现。
 
+## 轴映射
+
+BMI088 芯片寄存器按 X/Y/Z 顺序输出，`get_gyro` / `get_accel` 直接按这个顺序存入 `gyro[3]` / `acc[3]`。但芯片在 C 板上的物理安装方向导致**芯片坐标轴和板子坐标轴不是一一对应的**：
+
+```
+    BMI088 芯片轴          C 板坐标轴
+    ─────────────          ──────────
+    chip X  ──→  pitch  ←── board Y
+    chip Y  ──→  roll   ←── board X
+    chip Z  ──→  yaw    ←── board Z（一致）
+```
+
+| 索引 | 芯片轴 | 实际物理含义 | 对应的 INS 欧拉角 |
+|------|--------|------------|-----------------|
+| `gyro[0]` / `acc[0]` | chip X | **pitch** | `euler_angle[1]` |
+| `gyro[1]` / `acc[1]` | chip Y | **roll** | `euler_angle[0]` |
+| `gyro[2]` / `acc[2]` | chip Z | **yaw** | `euler_angle[2]` |
+
+> **gyro 数组和 euler 数组的索引含义不同**：`gyro[0]` 是 pitch 但 `euler_angle[0]` 是 roll。在云台控制中选择反馈源时，必须按物理含义选，不能用相同下标。详见 [[02_code_twin/apps/infantry3/single_board/gimbal_func/gimbal_func#BMI088-轴映射]]。
+
+> EKF 内部不关心这个映射——它把三轴数据当作一个整体做四元数旋转，输入输出的索引含义是一致的。只有**从 BMI088 单独取某一轴**做速度反馈时，才需要知道这个对应关系。
+
 ## SPI 读写封装
 
 > dummy byte 的原理（加速度计读多 1 字节、陀螺仪不需要）见 [[01_extracted/hardware/bmi088-datasheet#SPI 读写协议]]。

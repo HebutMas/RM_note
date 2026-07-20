@@ -113,6 +113,36 @@ ins_task_entry() — 每个线程 tick 循环一次
 
 > 步骤 10-11 是 BMI088 温控，挂在 INS 线程里因为它是周期性任务且需要 IMU 数据。详见 [[02_code_twin/modules/BMI088/module_bmi088#温控 PID]]。
 
+## 坐标系与轴映射
+
+### 欧拉角数组定义
+
+INS 输出的欧拉角按 **roll / pitch / yaw** 顺序排列：
+
+| 索引 | 物理量 | 板子轴向 | 单位 |
+|------|--------|---------|------|
+| `euler_angle[0]` / `euler_rad[0]` | roll | board X | 度 / 弧度 |
+| `euler_angle[1]` / `euler_rad[1]` | pitch | board Y | 度 / 弧度 |
+| `euler_angle[2]` / `euler_rad[2]` | yaw | board Z | 度 / 弧度 |
+
+### 与 BMI088 原始数据的索引错位
+
+BMI088 的 `gyro[3]` / `acc[3]` 由于芯片安装方向，索引含义和 euler 数组**不对齐**：
+
+| 物理量 | BMI088 索引 | INS euler 索引 |
+|--------|------------|---------------|
+| pitch | `gyro[0]` | `euler_rad[1]` |
+| roll | `gyro[1]` | `euler_rad[0]` |
+| yaw | `gyro[2]` | `euler_rad[2]` |
+
+> EKF 内部把三轴作为一个整体处理，不存在错位问题。只有在**单独取某一轴**做反馈时（如云台 pitch 速度反馈取 `gyro[0]` 而非 `gyro[1]`），才需要这张映射表。详见 [[02_code_twin/modules/BMI088/module_bmi088#轴映射]]。
+
+### 导航系定义
+
+导航系（地球系）取惯性系：前 X、左 Y、上 Z。`BodyFrameToEarthFrame` / `EarthFrameToBodyFrame` 用四元数在机体系和导航系之间转换。视觉协议也遵循这个坐标系定义，所以视觉命令可以直接作为 ref 下发。
+
+---
+
 ## 安装误差修正
 
 `IMU_Param_Correction()` 对陀螺仪和加速度计数据做两步修正：
