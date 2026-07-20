@@ -323,21 +323,9 @@ Bosch 标准坐标系，以芯片 Top View 为参考：
 - 加速度计：沿 X/Y/Z 正方向加速时输出正数
 - 陀螺仪：绕 X/Y/Z 正方向按右手定则旋转时输出正数（如绕 Z+ 逆时针旋转 → 正 yaw rate）
 
-### C 板 INS 坐标系
-
-![C 板 IMU 坐标系标注](images/c-board-ins-axes.png)
-
-C 板 PCB 丝印标注了 INS 导航系（也是视觉协议采用的坐标系）：
-
-| 轴 | 物理量 | INS euler 索引 | 板子方向 |
-|----|--------|---------------|---------|
-| X | roll | `euler_angle[0]` / `euler_rad[0]` | 向前 |
-| Y | pitch | `euler_angle[1]` / `euler_rad[1]` | 向左 |
-| Z | yaw | `euler_angle[2]` / `euler_rad[2]` | 向上（竖直） |
-
 ### 芯片轴 → C 板坐标系映射（代码验证）
 
-> 注意：C 板上的 BMI088 被硅胶封装覆盖，芯片的物理朝向和 Pin 1 位置不可见。以下映射关系**并非来自视觉观察**，而是通过代码实际使用反推的**经验事实**。
+> 注意：C 板上的 BMI088 被硅胶封装覆盖，芯片的物理朝向不可见。以下映射关系**并非来自视觉观察**，而是通过代码实际使用反推的**经验事实**。
 
 BMI088 数据手册定义的芯片坐标系（Top View，Pin1 在左下角时）：
 
@@ -350,23 +338,15 @@ BMI088 数据手册定义的芯片坐标系（Top View，Pin1 在左下角时）
 
 陀螺仪和加速度计寄存器按 X/Y/Z 顺序输出，`gyro[3]` / `acc[3]` 直接对应 chip X/Y/Z。
 
-根据代码实际使用（`gimbal_func.c` 中的反馈源选择）反推的映射关系：
+根据 `gimbal_func.c` 中反馈源选择的代码验证：
 
-| 寄存器索引 | 芯片轴 | 代码用途 | 对应 INS 物理量 |
-|-----------|--------|---------|---------------|
-| `gyro[0]` / `acc[0]` | chip X | pitch 角速度反馈（`gimbal_func.c`） | **pitch** |
-| `gyro[1]` / `acc[1]` | chip Y | 未在云台控制中直接使用 | **roll** |
-| `gyro[2]` / `acc[2]` | chip Z | yaw 角速度反馈（`gimbal_func.c`） | **yaw** |
+| 寄存器索引 | 芯片轴 | 代码用途 | 对应物理量 |
+|-----------|--------|---------|-----------|
+| `gyro[0]` / `acc[0]` | chip X | pitch 角速度反馈 | **pitch** |
+| `gyro[1]` / `acc[1]` | chip Y | 未直接使用 | **roll** |
+| `gyro[2]` / `acc[2]` | chip Z | yaw 角速度反馈 | **yaw** |
 
-结合 C 板丝印坐标系的物理方向，芯片安装产生的实际对应关系为：
-
-```
-    chip X ──→ C 板 -Y 方向 ──→ pitch
-    chip Y ──→ C 板  X 方向 ──→ roll
-    chip Z ──→ C 板  Z 方向 ──→ yaw
-```
-
-> 这是理解云台反馈源选择的关键：**`gyro[0]` 是 pitch 角速度，`gyro[1]` 是 roll 角速度**。`gyro` 数组的索引和 `euler` 数组的索引含义不同（`gyro[0]=pitch` 但 `euler[0]=roll`），选反馈源时必须按物理含义选，不能用相同下标。详见 [[02_code_twin/apps/infantry3/single_board/gimbal_func/gimbal_func#BMI088-轴映射]] 和 [[02_code_twin/modules/INS/module_ins#坐标系与轴映射]]。
+> 代码层面的实际映射关系（gyro 索引 → 物理含义、euler 数组定义、INS 导航坐标系）见 [[02_code_twin/modules/INS/module_ins#坐标系与轴映射]]。实际反馈源选择逻辑见 [[02_code_twin/apps/infantry3/single_board/gimbal_func/gimbal_func#BMI088-轴映射]]。
 
 以哨兵云台为例（代码验证）：
 

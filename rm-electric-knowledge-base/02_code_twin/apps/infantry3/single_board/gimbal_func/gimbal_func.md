@@ -23,7 +23,7 @@
 
 ### BMI088 轴映射：为什么 pitch 用 gyro[0] 而不是 gyro[1]
 
-> 芯片轴 → C 板坐标系（前 X、左 Y、上 Z）的完整推导和实物照片参考见 [[01_extracted/hardware/bmi088-datasheet#芯片轴 → C 板坐标系映射]]。
+> C 板 INS 坐标系定义（前 X、左 Y、上 Z）见 [[02_code_twin/modules/INS/module_ins#INS 导航坐标系（C 板丝印标注）]]。芯片轴 → C 板轴映射表见 [[02_code_twin/modules/BMI088/module_bmi088#轴映射]]。
 
 这是最容易踩坑的地方。BMI088 芯片寄存器按 X/Y/Z 输出，但芯片在 C 板上的物理安装方向导致芯片坐标轴和板子坐标轴不是一一对应的：
 

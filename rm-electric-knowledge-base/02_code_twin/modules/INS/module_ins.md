@@ -115,7 +115,17 @@ ins_task_entry() — 每个线程 tick 循环一次
 
 ## 坐标系与轴映射
 
-> C 板实物坐标系标注参考 [[01_extracted/hardware/bmi088-datasheet#C 板 INS 坐标系]]。芯片轴 → C 板轴映射详见 [[01_extracted/hardware/bmi088-datasheet#芯片轴 → C 板坐标系映射]]。
+### INS 导航坐标系（C 板丝印标注）
+
+![C 板 IMU 坐标系标注](../../../../01_extracted/hardware/images/c-board-ins-axes.png)
+
+C 板 PCB 丝印标注的坐标系（也是视觉协议采用的坐标系）定义如下：
+
+| 轴 | 物理量 | INS euler 索引 | 板子方向 |
+|----|--------|---------------|---------|
+| X | roll | `euler_angle[0]` / `euler_rad[0]` | 向前 |
+| Y | pitch | `euler_angle[1]` / `euler_rad[1]` | 向左 |
+| Z | yaw | `euler_angle[2]` / `euler_rad[2]` | 向上（竖直） |
 
 ### 欧拉角数组定义
 
@@ -129,7 +139,7 @@ INS 输出的欧拉角按 **roll / pitch / yaw** 顺序排列：
 
 ### 与 BMI088 原始数据的索引错位
 
-BMI088 的 `gyro[3]` / `acc[3]` 由于芯片安装方向，索引含义和 euler 数组**不对齐**：
+BMI088 芯片轴到 C 板坐标系存在映射关系（详见 [[01_extracted/hardware/bmi088-datasheet#芯片轴 → C 板坐标系映射]]），导致 `gyro[3]` / `acc[3]` 的索引含义和 euler 数组**不对齐**：
 
 | 物理量 | BMI088 索引 | INS euler 索引 |
 |--------|------------|---------------|
@@ -137,7 +147,7 @@ BMI088 的 `gyro[3]` / `acc[3]` 由于芯片安装方向，索引含义和 euler
 | roll | `gyro[1]` | `euler_rad[0]` |
 | yaw | `gyro[2]` | `euler_rad[2]` |
 
-> EKF 内部把三轴作为一个整体处理，不存在错位问题。只有在**单独取某一轴**做反馈时（如云台 pitch 速度反馈取 `gyro[0]` 而非 `gyro[1]`），才需要这张映射表。详见 [[02_code_twin/modules/BMI088/module_bmi088#轴映射]]。
+> EKF 内部把三轴作为一个整体处理，不存在错位问题。只有在**单独取某一轴**做反馈时（如云台 pitch 速度反馈取 `gyro[0]` 而非 `gyro[1]`），才需要这张映射表。详见 [[02_code_twin/modules/BMI088/module_bmi088#轴映射]] 和 [[02_code_twin/apps/infantry3/single_board/gimbal_func/gimbal_func#BMI088-轴映射]]。
 
 ### 导航系定义
 
