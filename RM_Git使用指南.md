@@ -239,6 +239,15 @@ git push --force-with-lease
 
 ## 分支管理规范
 
+### 仓库分支说明
+
+战队仓库使用两种分支模式：
+
+- `mas_embedded_threadx` 使用 `main + dev` 双主线。日常开发从 `dev` 创建功能分支，完成后向 `dev` 提 PR；`main` 保存稳定版本。
+- `RM_note` 只使用 `main`。修改从 `main` 创建功能分支，完成后向 `main` 提 PR。
+
+无论哪种模式，都不要直接在 `main` 或 `dev` 上修改和推送。
+
 ### 为什么用分支
 
 > **永远不要直接在 `main` 或 `dev` 上写代码。** 哪怕只改一行字，也要先开分支。分支是你的安全实验场，搞砸了删掉就好，不影响别人。
@@ -265,6 +274,8 @@ type 可选值：
 - `exp/新版电机驱动库测试`
 
 ### 创建与切换分支
+
+以下示例默认以 `mas_embedded_threadx` 的 `dev` 为目标分支；操作 `RM_note` 时将目标分支替换为 `main`。
 
 ```bash
 # 从最新的 dev 创建功能分支
@@ -539,15 +550,32 @@ git fetch teammate
 git merge teammate/feature/云台PID调参
 ```
 
-### 同步上游更新
+### 同步主线更新
 
-当你在 feature 分支开发期间，dev 被别人更新了，**合并前必须同步 dev 的最新代码**（merge vs rebase 的选择见[[#分支合并：merge vs rebase|分支合并]]一章）：
+当你在 feature 分支开发期间，目标分支被其他人更新时，合并前需要先同步最新代码。
+
+Member 从原始仓库 `upstream` 同步：
 
 ```bash
-git checkout feature/云台PID控制
-git fetch origin                      # owner 用 origin，member 用 upstream
-git merge origin/dev                  # 或 git rebase origin/dev
-git push                              # rebase 的话用 git push --force-with-lease
+git switch feature/云台PID控制
+git fetch upstream
+git merge upstream/dev
+# 个人分支也可以使用：git rebase upstream/dev
+```
+
+Owner 从主仓库 `origin` 同步：
+
+```bash
+git switch feature/云台PID控制
+git fetch origin
+git merge origin/dev
+# 个人分支也可以使用：git rebase origin/dev
+```
+
+同步后再推送功能分支。使用 rebase 时，需要执行：
+
+```bash
+git push --force-with-lease
 ```
 
 ---
