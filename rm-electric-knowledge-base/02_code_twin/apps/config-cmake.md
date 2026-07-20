@@ -28,7 +28,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/../modules/module_config.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/${ROBOT}/robot.cmake)
 ```
 
-先加载 [[02_code_twin/modules/module_config-cmake]]（默认参数模板），再加载 [[02_code_twin/apps/sentry/robot-cmake]]（机器人差异配置，覆盖默认值）。
+先加载 [[02_code_twin/modules/module_config-cmake]]（默认参数模板），再加载 [[02_code_twin/apps/sentry/robot-cmake]]（**机器人差异配置，覆盖默认值）**。
 
 ### 派生变量
 
