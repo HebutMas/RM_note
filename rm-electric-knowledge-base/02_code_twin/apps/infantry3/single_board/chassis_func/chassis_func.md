@@ -10,12 +10,12 @@
 
 ### 电机注册
 
-| 电机 | 型号 | CAN | tx_id | `motor_reverse_flag` | 角色 | 减速比 |
-|------|------|-----|-------|---------------------|------|--------|
-| [0] LF | M3508 | CAN1 | 1 | 0 | DRIVE | 16:1 |
-| [1] LB | M3508 | CAN1 | 2 | 0 | DRIVE | 16:1 |
-| [2] RB | M3508 | CAN1 | 3 | **1** | DRIVE | 16:1 |
-| [3] RF | M3508 | CAN1 | 4 | **1** | DRIVE | 16:1 |
+| 电机     | 型号    | CAN  | tx_id | `motor_reverse_flag` | 角色    | 减速比  |
+| ------ | ----- | ---- | ----- | -------------------- | ----- | ---- |
+| [0] LF | M3508 | CAN1 | 1     | 0                    | DRIVE | 16:1 |
+| [1] LB | M3508 | CAN1 | 2     | 0                    | DRIVE | 16:1 |
+| [2] RB | M3508 | CAN1 | 3     | **1**                | DRIVE | 16:1 |
+| [3] RF | M3508 | CAN1 | 4     | **1**                | DRIVE | 16:1 |
 
 全部注册到功率控制（DRIVE 角色），功率上限 120W。与哨兵底盘的区别：4 个驱动轮（哨兵 4 驱动 + 4 舵向 = 8 个），用麦轮逆运动学（哨兵用舵轮）。
 
@@ -73,20 +73,20 @@ if (motor->base.setting.motor_reverse_flag == 1) ref *= -1;  // ← 右侧两个
 
 运动学算出 `wheel_speed[4]` 后，`Motor_DJI_SetRef` 把值写入 `controller.ref`。右侧电机（[2]、[3]）的 ref 在进入 LQR 计算前被乘 -1。
 
-**效果**：运动学层面不需要关心单个电机的安装方向——`Chassis_Mecanum_Calc` 统一算出 4 个轮速，"哪侧需要翻转"由电机层自己处理。这就是你说的"抽象出黑盒子，明确 wrapper 的运动逻辑"。
+**效果**：运动学层面不需要关心单个电机的安装方向——`Chassis_Mecanum_Calc` 统一算出 4 个轮速，"哪侧需要翻转"由电机层自己处理。抽象出黑盒子，明确 wrapper 的运动逻辑"。
 
 ### `motor_reverse_flag` vs `feedback_reverse_flag`
 
-| 对比项 | `motor_reverse_flag` | `feedback_reverse_flag` |
-|--------|---------------------|----------------------|
-| 改的是 | ref（目标/执行侧） | measure（传感器反馈侧） |
-| 代码位置 | `CalculateLQROutput` 开头 | `CalculateLQROutput` 中段 |
-| 底盘用途 | 标定电机安装方向 `[0,0,1,1]` | 全 0（用电机自身编码器，方向一致） |
-| 云台用途 | 一般为 0 | P 轴用 INS 时设 1（INS 方向与电机相反） |
+| 对比项  | `motor_reverse_flag`    | `feedback_reverse_flag`    |
+| ---- | ----------------------- | -------------------------- |
+| 改的是  | ref（目标/执行侧）             | measure（传感器反馈侧）            |
+| 代码位置 | `CalculateLQROutput` 开头 | `CalculateLQROutput` 中段    |
+| 底盘用途 | 标定电机安装方向 `[0,0,1,1]`    | 全 0（用电机自身编码器，方向一致）         |
+| 云台用途 | 一般为 0                   | P 轴用 INS 时设 1（INS 方向与电机相反） |
 
 底盘 4 个电机的 `feedback_reverse_flag` 全是 0，因为它们用电机自身编码器做速度反馈，反馈方向和电机执行方向天然一致。只有在用外部传感器（如 INS、外部编码器）做反馈时，才可能出现反馈方向与电机方向相反的情况——这时候才需要 `feedback_reverse_flag`。
 
-> 详见 [[H:\File-Manager\Downloads\QQ\电机正负号、反馈源、取反笔记]] 中关于 P 轴 `feedback_reverse_flag = 1` 的推导。
+> 详见 [[02_code_twin/apps/infantry3/single_board/gimbal_func/gimbal_func#pitch 的 feedback_reverse_flag = 1：把反馈掰到电机轴]] 中关于 P 轴 `feedback_reverse_flag = 1` 的推导。
 
 ### 完整的取反链路（底盘 M3508）
 
@@ -291,7 +291,7 @@ M3508 的映射参数：
 ## 链接
 
 - 麦轮运动学公式：[[01_extracted/algorithm/chassis-kinematics]]（待建）
-- 电机取反笔记：[[H:\File-Manager\Downloads\QQ\电机正负号、反馈源、取反笔记]]
+- 云台反馈取反：[[02_code_twin/apps/infantry3/single_board/gimbal_func/gimbal_func#pitch 的 feedback_reverse_flag = 1：把反馈掰到电机轴]]
 - DJI 电机驱动：[[02_code_twin/modules/MOTOR/DJI/motor_dji]]
 - 电机基类：[[02_code_twin/modules/MOTOR/motor_base]]
 - 功率控制：[[02_code_twin/modules/MOTOR/POWER_CONTROL/power_control]]

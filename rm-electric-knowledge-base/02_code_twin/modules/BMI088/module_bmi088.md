@@ -41,6 +41,10 @@ typedef struct {
 
 ## 轴映射
 
+> 芯片坐标系与 C 板坐标系（前 X、左 Y、上 Z）的对应关系详见 [[01_extracted/hardware/bmi088-datasheet#芯片轴 → C 板坐标系映射]]。
+
+BMI088 寄存器按 X/Y/Z 顺序输出，`get_gyro` / `get_accel` 直接存入 `gyro[3]` / `acc[3]`。芯片在 C 板上的安装方向导致芯片轴和板子轴不对齐：
+
 BMI088 芯片寄存器按 X/Y/Z 顺序输出，`get_gyro` / `get_accel` 直接按这个顺序存入 `gyro[3]` / `acc[3]`。但芯片在 C 板上的物理安装方向导致**芯片坐标轴和板子坐标轴不是一一对应的**：
 
 ```

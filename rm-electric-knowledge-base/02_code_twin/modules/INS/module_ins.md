@@ -115,6 +115,8 @@ ins_task_entry() — 每个线程 tick 循环一次
 
 ## 坐标系与轴映射
 
+> C 板实物坐标系标注参考 [[01_extracted/hardware/bmi088-datasheet#C 板 INS 坐标系]]。芯片轴 → C 板轴映射详见 [[01_extracted/hardware/bmi088-datasheet#芯片轴 → C 板坐标系映射]]。
+
 ### 欧拉角数组定义
 
 INS 输出的欧拉角按 **roll / pitch / yaw** 顺序排列：

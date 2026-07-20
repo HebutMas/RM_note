@@ -358,9 +358,39 @@ BMI088 焊接在独立的 FPC 柔性小板上（见 [[01_extracted/hardware/c-bo
          Y+
 ```
 
-### 轴方向与机器人坐标系的对应
+### C 板 INS 坐标系
 
-芯片坐标系和机器人坐标系的对应关系取决于 C 板在机器人上的安装方式。
+> 参考：C 板实物照片标注。INS 导航系定义为**前 X、左 Y、上 Z**。
+
+| 轴 | 物理量 | INS euler 索引 | 板子方向 |
+|----|--------|---------------|---------|
+| X | roll | `euler_angle[0]` / `euler_rad[0]` | 向前 |
+| Y | pitch | `euler_angle[1]` / `euler_rad[1]` | 向左 |
+| Z | yaw | `euler_angle[2]` / `euler_rad[2]` | 向上（竖直） |
+
+### 芯片轴 → C 板坐标系映射
+
+BMI088 芯片焊接在 FPC 柔性小板上，FPC 小板竖直插入 C 板左上角。芯片安装方向导致芯片坐标轴和 C 板坐标轴不是一一对齐的：
+
+```
+BMI088 芯片（Top View，Pin1 在左下角）：
+       Y+ (短边)
+        ↑
+   Pin1 ●──→ X+ (长边)
+
+FPC 小板插入 C 板左上角后的映射关系：
+    chip X (长边) ──→ C 板左方 ──→ board Y 轴 ──→ pitch
+    chip Y (短边) ──→ C 板前方 ──→ board X 轴 ──→ roll
+    chip Z (垂直芯片) ──→ C 板上方 ──→ board Z 轴 ──→ yaw
+```
+
+| 芯片轴 | 寄存器索引 | 板子物理方向 | INS 物理量 |
+|--------|-----------|-------------|-----------|
+| X | `gyro[0]` / `acc[0]` | 向左 | **pitch** |
+| Y | `gyro[1]` / `acc[1]` | 向前 | **roll** |
+| Z | `gyro[2]` / `acc[2]` | 向上 | **yaw** |
+
+> 这是理解云台反馈源选择的关键：**`gyro[0]` 是 pitch 角速度，`gyro[1]` 是 roll 角速度**。`gyro` 数组的索引和 `euler` 数组的索引含义不同（`gyro[0]=pitch` 但 `euler[0]=roll`），选反馈源时必须按物理含义选，不能用相同下标。详见 [[02_code_twin/apps/infantry3/single_board/gimbal_func/gimbal_func#BMI088-轴映射]] 和 [[02_code_twin/modules/INS/module_ins#坐标系与轴映射]]。
 
 以哨兵云台为例（代码验证）：
 
@@ -370,4 +400,4 @@ BMI088 焊接在独立的 FPC 柔性小板上（见 [[01_extracted/hardware/c-bo
 | Y | `gyro[1]` / `acc[1]` | 未在云台控制中直接使用 | （侧向） |
 | Z | `gyro[2]` / `acc[2]` | Yaw 角速度反馈（`gimbal_func.c`） | Yaw 轴 |
 
-> C 板水平安装在哨兵底盘上，X 轴指向 Pitch 旋转方向，Z 轴指向 Yaw 旋转方向（竖直向上）。不同车型安装方式不同，映射关系会变。`IMU_Param_Correction()` 中的 `IMU_Param.Yaw/Pitch/Roll` 用于修正安装偏差，但当前代码中全部硬编码为 0（即默认芯片坐标系 = 机器人坐标系），见 [[02_code_twin/modules/INS/module_ins#初始化流程]]。
+> `IMU_Param_Correction()` 中的 `IMU_Param.Yaw/Pitch/Roll` 用于修正安装偏差，当前代码全部硬编码为 0（即默认芯片坐标系 = C 板坐标系）。如果实际安装有旋转或翻转，需要在这里配置安装角。
