@@ -133,7 +133,7 @@ void UTILS_Init(void) {
 | `Module_Offline_init()`   | [[02_code_twin/modules/OFFLINE/module_offline-c]]                                                                                              |  启用   |
 | `Module_Remote_init()`    | [[02_code_twin/modules/REMOTE/module_remote]] — SBUS: [[02_code_twin/modules/REMOTE/SBUS/sbus]] / DT7: [[02_code_twin/modules/REMOTE/DT7/dt7]] |  启用   |
 | `Module_BMI088_init()`    | [[02_code_twin/modules/BMI088/module_bmi088]]                                                                                                  |  启用   |
-| `Module_INS_Init()`       | 姿态解算                                                                                                                                           |  启用   |
+| `Module_INS_Init()`       | [[02_code_twin/modules/INS/module_ins]]                                                                                                          |  启用   |
 | `Module_Referee_Init()`   | 裁判系统                                                                                                                                           |  未启用  |
 | `Module_WT606_Init()`     | 陀螺仪                                                                                                                                            |  启用   |
 | `Module_SuperCap_Init()`  | 超级电容                                                                                                                                           |  未启用  |

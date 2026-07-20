@@ -73,8 +73,8 @@
 
 | 源码模块 | 备注 |
 |---------|------|
-| `modules/INS/` | BMI088 + 四元数 EKF 姿态解算，待展开 |
-| `modules/BMI088/` | SPI 驱动 + 温控 + 标定，待展开 |
+| `modules/INS/` | 姿态解算（四元数 EKF 黑盒） |
+| `modules/BMI088/` | SPI 驱动 + 温控 + 标定 |
 | `modules/BOARD_COMM/` | 板间 CAN 通信 |
 | `modules/REFEREE/` | 裁判系统协议解析 |
 | `modules/BOOTLOADER/` | IAP bootloader |
