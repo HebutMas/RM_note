@@ -109,6 +109,8 @@ void Module_Offline_device_update(Offline_Device *dev) {
 
 一行代码，但设计意义重要：每个设备**独立维护自己的心跳时间戳**。各模块在收到有效数据时调用（CAN 接收回调、UART 解码成功等），只更新自己的设备，不影响其他设备。检测任务统一扫描所有时间戳做超时判断。
 
+> `BSP_DWT_GetTimeline_ms()` 基于 DWT 定时器实现，详见 [[../../board/bsp/DWT/bsp_dwt]]。
+
 ## Module_Offline_get_device_status()
 
 ```c
@@ -118,4 +120,4 @@ uint8_t Module_Offline_get_device_status(Offline_Device *dev) {
 }
 ```
 
-`dev == NULL` 返回离线——如果注册失败返回了 `NULL`，后续查询状态不会空指针崩溃，而是安全地返回"离线"。这是防御性编程的典型做法。NULL 的含义见 [[01_extracted/algorithm/data-structure-linked-list#NULL 是什么]]，注册失败返回 NULL 的场景见 [[01_extracted/algorithm/data-structure-linked-list#注册 = 分配 + 填充 + 头插]]。
+`dev == NULL` 返回离线——如果注册失败返回了 `NULL`，后续查询状态不会空指针崩溃，而是安全地返回"离线"。
