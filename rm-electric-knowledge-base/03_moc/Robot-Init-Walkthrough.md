@@ -71,7 +71,8 @@ Robot_Init()
 │   ├── Module_Remote_init()           遥控器（SBUS/DT7）
 │   ├── Module_BMI088_init()           IMU 驱动
 │   ├── Module_INS_Init()              姿态解算
-│   ├── Module_WT606_Init()            陀螺仪
+│   ├── Module_WT606_Init()            陀螺仪（UART 串口 IMU）
+│   │   └── UART 接收线程 → 解析 acc/gyro/euler/quat
 │   ├── Module_Motor_Init()            电机任务（线程创建，链表此时为空）
 │   │   └── tx_thread_create → motor_task_entry
 │   │       └── 2ms: Motor_UpdateAll → PowerControl_Update → Motor_DJI_Flush
@@ -136,7 +137,7 @@ void UTILS_Init(void) {
 | `Module_BMI088_init()`    | [[02_code_twin/modules/BMI088/module_bmi088]]                                                                                                  |  启用   |
 | `Module_INS_Init()`       | [[02_code_twin/modules/INS/module_ins]]                                                                                                          |  启用   |
 | `Module_Referee_Init()`   | 裁判系统                                                                                                                                           |  未启用  |
-| `Module_WT606_Init()`     | 陀螺仪                                                                                                                                            |  启用   |
+| `Module_WT606_Init()`     | [[../../02_code_twin/modules/WT606/module_wt606]] — 串口 IMU（WT606/WT901）                                                                            |  启用   |
 | `Module_SuperCap_Init()`  | 超级电容                                                                                                                                           |  未启用  |
 | `Module_Motor_Init()`     | [[02_code_twin/modules/MOTOR/motor_base]]                                                                                                      |  启用   |
 | `Module_Vision_Init()`    | [[02_code_twin/modules/VISION/module_vision]]                                                                                                  |  启用   |
