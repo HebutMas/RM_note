@@ -142,40 +142,6 @@ void UTILS_Init(void) {
 | `Module_Vision_Init()`    | [[02_code_twin/modules/VISION/module_vision]]                                                                                                  |  启用   |
 | `Module_BoardComm_Init()` | 板间通信                                                                                                                                           |  启用   |
 
-#### Module_Motor_Init() — 线程先建，电机后注册
-
-`Module_Motor_Init()` 只做一件事：创建 motor 线程并启动 2ms 循环：
-
-```c
-void Module_Motor_Init(void) {
-    tx_thread_create(&motor_thread, "motor", motor_task_entry, ...);
-}
-
-static void motor_task_entry(ULONG thread_input) {
-    while (1) {
-        Motor_UpdateAll();        // 遍历电机链表，逐个调用 ControlAndSend
-        PowerControl_Update();
-        Motor_DJI_Flush();        // 大疆电机批量发送
-        tx_thread_sleep(2);      // 2ms 周期
-    }
-}
-```
-
-但此时电机链表是空的——`Motor_UpdateAll()` 遍历空链表直接返回，什么也不做。电机注册发生在后面的 APP_Init 阶段，`gimbal_init()` 和 `shoot_init()` 通过 `Motor_DJI_Init()` 将电机挂入链表。注册完成后，下一个 2ms 周期 `Motor_UpdateAll()` 就能遍历到电机并开始控制。
-
-为什么要这样设计？因为 `Module_Motor_Init()` 是模块层（所有兵种共用），而电机注册是应用层（不同兵种注册不同电机）。模块层先建好线程和链表框架，应用层往里面填电机，详见 [[02_code_twin/modules/MOTOR/motor_base]]。
-
-#### Module_Vision_Init()
-
-```c
-void Module_Vision_Init(void) {
-    offline_dev = Module_Offline_register(&offlineconfig);  // 注册离线检测
-    tx_thread_create(&vision_thread, "vision_thread", ...); // 创建接收线程
-}
-```
-
-创建独立的视觉接收线程，阻塞等待 USB 数据。详见 [[02_code_twin/modules/VISION/module_vision]]。
-
 ### APP_Init()
 
 `apps/app_init.c` → [[02_code_twin/apps/app_init]]
