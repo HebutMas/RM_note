@@ -10,7 +10,7 @@
 
 ### CAN 总线接口
 
-> 出处：[[00_raw/hardware/RoboMaster  开发板 C 型用户手册.pdf#page=14|P.12]]，附表 [[00_raw/hardware/RoboMaster  开发板 C 型用户手册.pdf#page=19|P.17]]
+> 出处：[[00_raw/hardware/RoboMaster  开发板 C 型用户手册.pdf#page=15|P.13]]，附表 [[00_raw/hardware/RoboMaster  开发板 C 型用户手册.pdf#page=19|P.17]]
 
 开发板集成 2 路 CAN，最大支持 1Mbps。
 
