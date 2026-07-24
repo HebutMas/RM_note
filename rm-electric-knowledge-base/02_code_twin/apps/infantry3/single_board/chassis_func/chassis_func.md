@@ -21,6 +21,8 @@
 
 全部注册到功率控制（DRIVE 角色），功率上限 120W。
 
+- DJI 电机驱动：[[02_code_twin/modules/MOTOR/DJI/motor_dji]]
+
 ### 几何配置
 
 ```c
@@ -38,15 +40,15 @@ static const Chassis_Diff_Config_s chassis_diff_config = {
 
 4 个 M3508 全部相同配置：
 
-| 配置项 | 值 | 含义 |
-|--------|-----|------|
-| `loop_type` | `SPEED_LOOP` | 速度闭环（无位置环） |
-| `algorithm_type` | `CONTROL_LQR` | LQR 控制 |
-| `state_dim` | 1 | 单状态（仅角速度） |
-| `K[0]` | 0.008 | 角速度增益 |
-| `feedback_reverse_flag` | 0 | 反馈不取反（用电机自身编码器） |
-| `angle_feedback_source` | 0 | 电机自身角度反馈 |
-| `speed_feedback_source` | 0 | 电机自身速度反馈 |
+| 配置项                     | 值             | 含义              |
+| ----------------------- | ------------- | --------------- |
+| `loop_type`             | `SPEED_LOOP`  | 速度闭环（无位置环）      |
+| `algorithm_type`        | `CONTROL_LQR` | LQR 控制          |
+| `state_dim`             | 1             | 单状态（仅角速度）       |
+| `K[0]`                  | 0.008         | 角速度增益           |
+| `feedback_reverse_flag` | 0             | 反馈不取反（用电机自身编码器） |
+| `angle_feedback_source` | 0             | 电机自身角度反馈        |
+| `speed_feedback_source` | 0             | 电机自身速度反馈        |
 
 > `state_dim=1` 的 LQR 退化为纯比例控制：`output = -K0 * (measure - ref)` = `K0 * (ref - measure)`。
 
@@ -56,17 +58,34 @@ static const Chassis_Diff_Config_s chassis_diff_config = {
 
 ### 为什么 `motor_reverse_flag` 是 `[0, 0, 1, 1]`
 
-麦轮底盘的 4 个电机左右对称安装。左侧电机（LF、LB）和右侧电机（RB、RF）的安装方向相反：
+麦轮底盘的 4 个电机左右对称安装，左侧和右侧电机的安装方向相反。
+
+**如果不加取反，同样给正速度指令时：**
 
 ```
-         Front (前)
+         Front
      ┌───────────┐
-     │ 0       3 │   0: 左前 LF  reverse=0
-     │           │   1: 左后 LB  reverse=0
-     │ 1       2 │   2: 右后 RB  reverse=1
-     └───────────┘   3: 右前 RF  reverse=1
-         Back  (后)
+     │ ↻      ↺ │   LF 顺时针 (↻)    RF 逆时针 (↺)
+     │           │   ← 方向相反 →
+     │ ↻      ↺ │   LB 顺时针 (↻)    RB 逆时针 (↺)
+     └───────────┘
 ```
+
+左侧电机正转 = 顺时针，右侧电机正转 = 逆时针 → 左右轮子反转，底盘不会前进。
+
+**加上 `reverse=[0,0,1,1]` 后：**
+
+```
+         Front
+     ┌───────────┐
+     │ ↻      ↻ │   LF 顺时针 (↻)    RF 顺时针 (↻)
+     │           │   ← 方向一致 →
+     │ ↻      ↻ │   LB 顺时针 (↻)    RB 顺时针 (↻)
+     └───────────┘
+         Back
+```
+
+右侧电机的 ref 被取反，正速度指令变为逆时针 → 实际转动方向与左侧一致，四轮同向旋转 → 前进。
 
 `motor_reverse_flag` 在 `CalculateLQROutput()` 中将 ref 取反，使运动学层不需要关心单个电机的安装方向。完整取反机制见 [[02_code_twin/modules/MOTOR/motor_base#坐标系与取反机制]]。
 
@@ -108,8 +127,3 @@ Chassis_Mecanum_Calc(motors, config, vx, vy, vw);
 把底盘速度向量分解为 4 个轮子的目标速度（rad/s），直接写入 `Motor_DJI_SetRef`。实现在 `modules/algorithm/chassis_type.c`，详见 [[02_code_twin/algorithm/chassis_type]]。
 
 ---
-
-## 链接
-
-- 公共底盘算法层：[[02_code_twin/algorithm/chassis_type]]
-- DJI 电机驱动：[[02_code_twin/modules/MOTOR/DJI/motor_dji]]
