@@ -47,14 +47,14 @@ void IMU_QuaternionEKF_Update(float gx, float gy, float gz,    // 陀螺仪三�
 
 ### 输出（全局变量 `QEKF_INS`）
 
-| 字段 | 含义 |
-|------|------|
-| `QEKF_INS.q[4]` | 四元数估计值 (w, x, y, z) |
-| `QEKF_INS.Roll` / `Pitch` / `Yaw` | 欧拉角（度） |
-| `QEKF_INS.YawTotalAngle` | yaw 累计角度（度，含圈数） |
-| `QEKF_INS.YawRoundCount` | yaw 圈数计数 |
-| `QEKF_INS.GyroBias[3]` | 陀螺仪零偏估计值 |
-| `QEKF_INS.ConvergeFlag` | 收敛标志（0=未收敛, 1=已收敛） |
+| 字段                                | 含义                  |
+| --------------------------------- | ------------------- |
+| `QEKF_INS.q[4]`                   | 四元数估计值 (w, x, y, z) |
+| `QEKF_INS.Roll` / `Pitch` / `Yaw` | 欧拉角（度）              |
+| `QEKF_INS.YawTotalAngle`          | yaw 累计角度（度，含圈数）     |
+| `QEKF_INS.YawRoundCount`          | yaw 圈数计数            |
+| `QEKF_INS.GyroBias[3]`            | 陀螺仪零偏估计值            |
+| `QEKF_INS.ConvergeFlag`           | 收敛标志（0=未收敛, 1=已收敛）  |
 
 ### 初始化参数
 
@@ -115,43 +115,66 @@ ins_task_entry() — 每个线程 tick 循环一次
 
 ## 坐标系与轴映射
 
-### INS 导航坐标系（C 板丝印标注）
+### INS 导航系定义
 
-![C 板 IMU 坐标系标注](../../../../01_extracted/hardware/images/c-board-ins-axes.png)
+INS 导航系为 **前X 右Y 上Z**（右手系）。这是 EKF 四元数运动学方程使用右手系数学自然输出的结果，不是代码中显式做了坐标变换。
 
-C 板 PCB 丝印标注的坐标系（也是视觉协议采用的坐标系）定义如下：
-
-| 轴 | 物理量 | INS euler 索引 | 板子方向 |
+| 轴 | 物理量 | INS euler 索引 | 物理方向 |
 |----|--------|---------------|---------|
 | X | roll | `euler_angle[0]` / `euler_rad[0]` | 向前 |
-| Y | pitch | `euler_angle[1]` / `euler_rad[1]` | 向左 |
+| Y | pitch | `euler_angle[1]` / `euler_rad[1]` | 向右 |
 | Z | yaw | `euler_angle[2]` / `euler_rad[2]` | 向上（竖直） |
 
+### 右手系规则
+
+**欧拉角公式**：
+```c
+// Yaw = 绕 Z 轴旋转（标准 yaw 公式）
+QEKF_INS.Yaw   = atan2(2*(q0*q3 + q1*q2), 2*(q0²+q1²)-1);
+// Pitch = 绕 X 轴旋转（标准 roll 公式，但命名 pitch）
+QEKF_INS.Pitch = atan2(2*(q0*q1 + q2*q3), 2*(q0²+q3²)-1);
+// Roll = 绕 Y 轴旋转（标准 pitch 公式，但命名 roll）
+QEKF_INS.Roll  = asin(-2*(q1*q3 - q0*q2));
+```
+
+这块ins的解算很别扭,实际上pitch和roll互换了位置,成为了一个右手系,鉴于这是玺佬的代码,就不专门修改了
+在实际的c板标注如下
+![C板欧拉角坐标系](../../../01_extracted/hardware/assets/gnss-module-axes.png)
+
+> 蓝色箭头：INS 解算的欧拉角坐标系（x/euler[0], y/euler[1], z/euler[2]）
 ### 欧拉角数组定义
 
-INS 输出的欧拉角按 **roll / pitch / yaw** 顺序排列：
+INS 输出的欧拉角按 **roll / pitch / yaw** 顺序排列
 
-| 索引 | 物理量 | 板子轴向 | 单位 |
-|------|--------|---------|------|
-| `euler_angle[0]` / `euler_rad[0]` | roll | board X | 度 / 弧度 |
-| `euler_angle[1]` / `euler_rad[1]` | pitch | board Y | 度 / 弧度 |
-| `euler_angle[2]` / `euler_rad[2]` | yaw | board Z | 度 / 弧度 |
+| 索引                                | 物理量   | 对应旋转轴       | 单位     |
+| --------------------------------- | ----- | ----------- | ------ |
+| `euler_angle[0]` / `euler_rad[0]` | roll  | 绕 Y 轴（左右方向） | 度 / 弧度 |
+| `euler_angle[1]` / `euler_rad[1]` | pitch | 绕 X 轴（前后方向） | 度 / 弧度 |
+| `euler_angle[2]` / `euler_rad[2]` | yaw   | 绕 Z 轴（竖直方向） | 度 / 弧度 |
 
-### 与 BMI088 原始数据的索引错位
+### 与 BMI088 的轴映射关系
 
-BMI088 芯片轴到 C 板坐标系存在映射关系（详见 [[01_extracted/hardware/bmi088-datasheet#芯片轴 → C 板坐标系映射]]），导致 `gyro[3]` / `acc[3]` 的索引含义和 euler 数组**不对齐**：
+BMI088 芯片物理轴为 **前X 左Y 上Z**（详见 [[01_extracted/hardware/bmi088-orientation]]）
+用蓝色箭头代表ins解算坐标系,红色箭头代表bmi088的陀螺仪坐标系
+则有
+![陀螺仪 vs 欧拉角坐标系](../../../01_extracted/hardware/assets/fc-board-axes.png)
 
-| 物理量 | BMI088 索引 | INS euler 索引 |
-|--------|------------|---------------|
-| pitch | `gyro[0]` | `euler_rad[1]` |
-| roll | `gyro[1]` | `euler_rad[0]` |
-| yaw | `gyro[2]` | `euler_rad[2]` |
+> 红色箭头：gyro 坐标系（x/gyro[0], y/gyro[1], z/gyro[2]）
+> 蓝色箭头：euler 坐标系（x/euler[0], y/euler[1], z/euler[2]）
 
-> EKF 内部把三轴作为一个整体处理，不存在错位问题。只有在**单独取某一轴**做反馈时（如云台 pitch 速度反馈取 `gyro[0]` 而非 `gyro[1]`），才需要这张映射表。详见 [[02_code_twin/modules/BMI088/module_bmi088#轴映射]] 和 [[02_code_twin/apps/infantry3/single_board/gimbal_func/gimbal_func#BMI088-轴映射]]。
+| 物理量   | BMI088 芯片轴 | BMI088 代码索引          | INS euler 索引   |
+| ----- | ---------- | -------------------- | -------------- |
+| pitch | chip X     | `gyro[0]` / `acc[0]` | `euler_rad[1]` |
+| roll  | chip Y     | `gyro[1]` / `acc[1]` | `euler_rad[0]` |
+| yaw   | chip Z     | `gyro[2]` / `acc[2]` | `euler_rad[2]` |
+
+> EKF 把三轴数据当作一个整体做四元数旋转，不存在错位问题。只有在**单独取某一轴**做反馈时（如云台 pitch 速度反馈取 `gyro[0]` 而非 `gyro[1]`），才需要这个映射。具体场景见应用层各云台控制模块。
 
 ### 导航系定义
 
-导航系（地球系）取惯性系：前 X、左 Y、上 Z。`BodyFrameToEarthFrame` / `EarthFrameToBodyFrame` 用四元数在机体系和导航系之间转换。视觉协议也遵循这个坐标系定义，所以视觉命令可以直接作为 ref 下发。
+导航系（地球系）取惯性系：前 X、右 Y、上 Z。`BodyFrameToEarthFrame` / `EarthFrameToBodyFrame` 用四元数在机体系和导航系之间转换。
+
+> 视觉协议以摄像机前方为 x 轴，yaw/pitch 基于此定义，为 **前X 左Y 上Z**（与 BMI088 物理轴一致，与 INS 导航系 Y 轴相反）。视觉命令下发到控制目标时，需注意 Y 轴方向差异。
 
 ---
 
@@ -185,16 +208,6 @@ typedef struct {
 
 应用层通过 `Module_INS_get()` 拿到 `const Ins_t *`，直接读字段。
 
-## 被谁调用
-
-| 调用者 | 用什么字段 | 链接 |
-|--------|-----------|------|
-| `Robot_Init()` | `Module_INS_Init()` 一次性初始化 | [[03_moc/Robot-Init-Walkthrough#Module_Init()]] |
-| 哨兵云台 `gimbal_func` | `ins->YawTotalAngle_rad`（yaw 反馈）、`ins->euler_rad[1]`（pitch 反馈）、`ins->q[4]`（发视觉） | [[02_code_twin/apps/sentry/gimbal_board/gimbal_func/gimbal_func]] |
-| 哨兵云台 `robot_control` | `ins->q[4]` 填入视觉 SendPacket | [[02_code_twin/apps/sentry/gimbal_board/robot_control]] |
-| 步兵3号 `gimbal_func` | 同哨兵，yaw/pitch 反馈 + 视觉四元数 | [[02_code_twin/apps/infantry3/single_board/gimbal_func/gimbal_func]] |
-| 步兵3号 `robot_control` | `ins->q[4]` 填入视觉 SendPacket | [[02_code_twin/apps/infantry3/single_board/robot_control]] |
-
 ## 与 BMI088 的耦合
 
 INS 线程直接调用 `Module_BMI088_get_accel/gyro/temp` + `temp_ctrl`，两个模块在代码层面是耦合的——没有 BMI088，INS 无法独立工作。
@@ -203,4 +216,4 @@ INS 线程直接调用 `Module_BMI088_get_accel/gyro/temp` + `temp_ctrl`，两�
 > - **C 板 + BMI088**（本项目）：自己读原始数据 → 自己跑 EKF 解算 → 自己做温控。代码量大但完全可控。
 > - **成品 IMU（如 WT606）**：固件内部已做好解算，通信协议直接输出四元数/欧拉角。代码量小但无法调整算法。
 >
-> 当前先保持耦合，没有更好的拆分方案。
+> 当前先保持耦合，如后续有类似自研c版+bmi088再考虑解耦。

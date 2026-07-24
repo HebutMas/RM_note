@@ -203,3 +203,107 @@ typedef struct {
 联合体 `transport_config` 按 `transport` 字段选择对应配置。目前所有电机都用 CAN，填 `.transport_config.can`（包含 `hcan`、`tx_id`、`rx_id` 等）。
 
 电机参数（`motor_init_info` 中的转矩常数、减速比、最大力矩）来自 [[01_extracted/motor/motor_params#特征参数]]。
+## 坐标系与取反机制
+
+> 本节是电机反转逻辑的**权威来源**。应用层各场景（云台、底盘）遇到反转问题时，应链接回本节。本节不涉及具体场景。
+>
+> 坐标系定义见 [[01_extracted/hardware/bmi088-orientation]]（BMI088 物理轴）和 [[02_code_twin/modules/INS/module_ins]]（INS 导航系）。
+
+### 为什么需要取反
+
+从传感器读数到电机输出，中间经过多层坐标系，每一层都可能出现方向不一致：
+
+```
+传感器原始数据 (BMI088 gyro/acc)
+    ↓ 物理安装方向
+机体坐标系 (前X 左Y 上Z 或 前X 右Y 上Z)
+    ↓ feedback_reverse_flag (测量端取反)
+电机轴坐标系 (电机正方向定义的坐标系)
+    ↓ motor_reverse_flag (参考端取反)
+控制目标坐标系 (遥控器/视觉输入的坐标系)
+```
+
+两个取反标志解决不同层面的方向问题，**独立配置、互不干扰**。
+
+### `feedback_reverse_flag` — 测量端取反
+
+**作用**：把外部传感器反馈掰到电机轴方向。
+
+**代码位置**：`CalculateLQROutput()` 中段，读取 `measure` 后判断：
+
+```c
+// 伪代码示意
+rad_speed = motor->base.measure.speed_rad;
+if (feedback_reverse_flag == 1)
+    rad_speed *= -1;  // 反馈取反
+```
+
+**适用场景**：电机使用外部传感器（如 INS、BMI088）做反馈时，传感器的正方向与电机正方向不一致。
+
+**典型例子**：pitch 电机的 `feedback_reverse_flag = 1`。INS 的 pitch 正方向是"低头"，但 DM4310 电机正方向是"抬头"——如果不取反，反馈会变成正反馈，系统发散。具体场景见云台控制模块。
+
+### `motor_reverse_flag` — 参考端取反
+
+**作用**：把已经对齐到电机轴的控制目标（ref）进一步对齐到控制目标坐标系。
+
+**代码位置**：`CalculateLQROutput()` 开头，读取 `ref` 后判断：
+
+```c
+// 伪代码示意
+ref = motor->base.controller.ref;
+if (motor_reverse_flag == 1)
+    ref *= -1;  // 参考取反
+```
+
+**适用场景**：电机物理安装方向与运动学/控制目标坐标系相反。常见于对称安装的电机（如麦轮底盘左右两侧）。
+
+**典型例子**：底盘右侧两个 M3508 的 `motor_reverse_flag = 1`。麦轮底盘左右电机安装方向相反，运动学算出的 wheel_speed 是"底盘坐标系下的轮速"，右侧电机需要取反才能让轮子实际转对方向。具体场景见底盘控制模块。
+
+### 两者的区别
+
+| 对比项 | `feedback_reverse_flag` | `motor_reverse_flag` |
+|--------|------------------------|---------------------|
+| 改的是 | **measure**（传感器反馈值） | **ref**（控制目标值） |
+| 作用环节 | 传感器系 → 电机系 | 电机系 → 控制目标系 |
+| 触发原因 | 传感器方向与电机方向相反 | 电机安装方向与坐标系相反 |
+| 底盘典型值 | 全 0（用电机自身编码器） | `[0,0,1,1]`（左右对称） |
+| 云台典型值 | pitch=1（INS 方向与电机相反） | 全 0（上层已处理符号） |
+
+### 完整取反链路
+
+以云台 pitch 电机为例，一个控制周期内完整的数据流：
+
+```
+INS 输出 euler_rad[1] (pitch 角度)
+    │
+    ├── 读入 LQR 作为 other_angle_feedback_ptr
+    │
+    ├── feedback_reverse_flag == 1 ?
+    │     └─ YES → measure = -euler_rad[1]   ← 测量取反，掰到电机轴
+    │
+    ├── 读入 other_speed_feedback_ptr = bmi088_dev->gyro[0]
+    │     └─ 同上，feedback_reverse_flag 同时影响角度和速度反馈
+    │
+    ├── CalculateLQROutput:
+    │     ├── ref = controller.ref
+    │     ├── motor_reverse_flag == 1 ? (pitch 这里不取反)
+    │     ├── output = -K * (measure - ref)   ← LQR 计算
+    │     └── output → torque → CAN 报文
+```
+
+### 关于 `angle_feedback_source` 和 `speed_feedback_source`
+
+除了两个取反 flag，还有两个选择反馈来源的配置：
+
+| 字段 | 0 | 1 |
+|------|---|----|
+| `angle_feedback_source` | 电机自身编码器 | INS 欧拉角 (`euler_rad`) |
+| `speed_feedback_source` | 电机自身转速 | BMI088 陀螺仪 (`gyro`) |
+
+当 `feedback_source = 1` 时，使用外部传感器做反馈，此时 `feedback_reverse_flag` 才有意义（自身编码器方向天然与电机一致，不需要取反）。
+
+### 与 INS/BMI088 的关系
+
+- `feedback_reverse_flag` 涉及的传感器反馈来自 BMI088/INS，详见 [[02_code_twin/modules/INS/module_ins]] 和 [[01_extracted/hardware/bmi088-orientation]]
+- 电机自身编码器不存在方向问题，不需要取反
+- 本文（motor_base）只定义取反机制，**各应用层具体场景**（哪个电机为什么需要取反）在各自文件中说明

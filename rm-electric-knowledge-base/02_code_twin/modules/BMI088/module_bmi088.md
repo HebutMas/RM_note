@@ -41,19 +41,15 @@ typedef struct {
 
 ## 轴映射
 
-> 芯片轴定义见 [[01_extracted/hardware/bmi088-datasheet#芯片坐标系（BMI088 数据手册定义）]]。C 板 INS 导航坐标系定义见 [[02_code_twin/modules/INS/module_ins#INS 导航坐标系（C 板丝印标注）]]。
+> BMI088 芯片在 C 板上的物理方向（Pin1 位置、长边方向、坐标系推导）见 [[01_extracted/hardware/bmi088-orientation]]，本文不再重复。
 
-BMI088 寄存器按 X/Y/Z 顺序输出，`get_gyro` / `get_accel` 直接存入 `gyro[3]` / `acc[3]`。芯片安装方向导致芯片轴和板子轴不对齐（代码验证，非视觉观察）：
+BMI088 寄存器按 X/Y/Z 顺序输出，`get_gyro` / `get_accel` 直接存入 `gyro[3]` / `acc[3]`。芯片安装方向导致芯片轴和板子轴不对齐（实物验证 + 代码验证双重确认）：
 
-| 索引 | 芯片轴 | 实际物理含义 | 对应的 INS 欧拉角 |
-|------|--------|------------|-----------------|
-| `gyro[0]` / `acc[0]` | chip X | **pitch** | `euler_angle[1]` |
-| `gyro[1]` / `acc[1]` | chip Y | **roll** | `euler_angle[0]` |
-| `gyro[2]` / `acc[2]` | chip Z | **yaw** | `euler_angle[2]` |
-
-> **gyro 数组和 euler 数组的索引含义不同**：`gyro[0]` 是 pitch 但 `euler_angle[0]` 是 roll。在云台控制中选择反馈源时，必须按物理含义选，不能用相同下标。详见 [[02_code_twin/apps/infantry3/single_board/gimbal_func/gimbal_func#BMI088-轴映射]]。
-
-> EKF 内部不关心这个映射——它把三轴数据当作一个整体做四元数旋转，输入输出的索引含义是一致的。只有**从 BMI088 单独取某一轴**做速度反馈时，才需要知道这个对应关系。
+| 索引                   | 芯片轴    | 实际物理含义          |
+| -------------------- | ------ | --------------- |
+| `gyro[0]` / `acc[0]` | chip X | **v_roll/v_x**  |
+| `gyro[1]` / `acc[1]` | chip Y | **v_pitch/v_y** |
+| `gyro[2]` / `acc[2]` | chip Z | **v_yaw/v_z**   |
 
 ## SPI 读写封装
 

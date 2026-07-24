@@ -23,19 +23,9 @@
 
 ### BMI088 轴映射：为什么 pitch 用 gyro[0] 而不是 gyro[1]
 
-> C 板 INS 坐标系定义（前 X、左 Y、上 Z）见 [[02_code_twin/modules/INS/module_ins#INS 导航坐标系（C 板丝印标注）]]。芯片轴 → C 板轴映射表见 [[02_code_twin/modules/BMI088/module_bmi088#轴映射]]。
+> BMI088 芯片在 C 板上的物理方向（Pin1 位置、长边方向、坐标系推导）详见 [[01_extracted/hardware/bmi088-orientation]]。芯片轴到 C 板轴的映射表详见 [[02_code_twin/modules/BMI088/module_bmi088#轴映射]]。
 
-这是最容易踩坑的地方。BMI088 芯片寄存器按 X/Y/Z 输出，但芯片在 C 板上的物理安装方向导致芯片坐标轴和板子坐标轴不是一一对应的：
-
-```
-    BMI088 芯片轴          C 板坐标轴（你的图片标注）
-    ─────────────          ──────────────────────
-    chip X  ──→  pitch  ←── board Y / euler[1]
-    chip Y  ──→  roll   ←── board X / euler[0]
-    chip Z  ──→  yaw    ←── board Z / euler[2]
-```
-
-因此 `bmi088_dev->gyro[3]` 的实际含义是：
+这是最容易踩坑的地方。BMI088 输出 `gyro[0/1/2]` 对应 chip X/Y/Z，但芯片在 C 板上的物理安装方向导致索引含义与直觉不符：
 
 | 索引 | 芯片轴 | 实际物理含义 | 对应的 INS 欧拉角 |
 |------|--------|------------|-----------------|
@@ -85,7 +75,7 @@ if (feedback_reverse_flag == 1)            // pitch 电机 = 1
 
 ### 为什么不对 ref 取反
 
-注意 pitch 电机的 `motor_reverse_flag` 没有设置（默认 0），即 ref 不取反。这与底盘电机不同——底盘的 `motor_reverse_flag` 是为了处理安装方向，而 pitch 这里通过另一种方式解决。
+注意 pitch 电机的 `motor_reverse_flag` 没有设置（默认 0），即 ref 不取反。这与底盘电机不同（底盘的 `motor_reverse_flag = [0,0,1,1]` 是为了处理左右对称安装，详见 [[02_code_twin/modules/MOTOR/motor_base#motor_reverse_flag -- 参考端取反]]）。
 
 原因在于 **ref 的符号在更上层就已经对了**。`gimbal_func` 中：
 
@@ -93,21 +83,18 @@ if (feedback_reverse_flag == 1)            // pitch 电机 = 1
 Motor_DM_SetRef(pitch_motor, gimbal_cmd->pitch * DEGREE_2_RAD);
 ```
 
-`gimbal_cmd->pitch` 来自遥控器/视觉输入。
+`gimbal_cmd->pitch` 来自遥控器/视觉输入。遥控器往上推 → pitch ref 值增加。pitch 轴向上为正（抬头 = 电机正方向），且 feedback 已取反对齐到电机坐标系，所以 ref 符号在更上层已经正确，不需要 `motor_reverse_flag`。
 
-> **理论推导（待代码验证）**：遥控器往上推 → pitch ref 值增加。pitch 轴向上为正（抬头 = 电机正方向），且 feedback 已取反对齐到电机坐标系，所以往前推时 P 轴是上仰的，ref 符号在更上层已经正确，因此 `motor_reverse_flag = 0`（ref 不取反）。
->
-> 实际代码中遥控器通道的映射方式尚未确认，以上仅为理论分析。
+pitch 电机的完整配置：
 
-总结三个 flag 的分工：
+| flag | 值 | 含义 |
+|------|-----|------|
+| `feedback_reverse_flag` | **1** | INS 和电机方向相反，需要取反反馈 |
+| `motor_reverse_flag` | 0 | 上层已处理符号，ref 不取反 |
+| `angle_feedback_source` | 1 | 用 INS 欧拉角 |
+| `speed_feedback_source` | 1 | 用 BMI088 陀螺仪 |
 
-| flag | 作用 | pitch 电机 | yaw 电机 | 底盘 M3508 |
-|------|------|-----------|---------|-----------|
-| `feedback_reverse_flag` | 反转外部反馈（角度+速度） | **1**（INS 和电机方向相反） | 0 | 0（用电机自身编码器） |
-| `motor_reverse_flag` | 反转 ref | 0（上层已处理符号） | 0 | [0,0,1,1]（左右安装对称） |
-| `angle/speed_feedback_source` | 选反馈来源 | 1（INS） | 1（INS） | 0（电机编码器） |
-
-> **设计思路**：`feedback_reverse_flag` 处理传感器和电机之间的坐标系差异，`motor_reverse_flag` 处理电机安装方向，两者在不同环节独立工作。步兵3号 pitch 只需要前者，不需要后者。
+> 两个反转 flag 的定义和区别详见 [[02_code_twin/modules/MOTOR/motor_base#坐标系与取反机制]]。
 
 ---
 
@@ -147,9 +134,10 @@ void gimbal_func(Gimbal_Ctrl_Cmd_t *gimbal_cmd, uint16_t *yaw_ecd) {
 
 ## 链接
 
-- BMI088 轴映射：[[02_code_twin/modules/BMI088/module_bmi088#轴映射]]
-- INS 欧拉角定义：[[02_code_twin/modules/INS/module_ins#坐标系与轴映射]]
-- 电机取反逻辑：[[02_code_twin/apps/infantry3/single_board/chassis_func/chassis_func#电机取反逻辑]]
+- BMI088 物理轴方向（实物验证）：[[01_extracted/hardware/bmi088-orientation]]
+- BMI088 代码轴映射：[[02_code_twin/modules/BMI088/module_bmi088#轴映射]]
+- INS 导航系定义与右手系规则：[[02_code_twin/modules/INS/module_ins#坐标系与轴映射]]
+- 电机取反机制（权威来源）：[[02_code_twin/modules/MOTOR/motor_base#坐标系与取反机制]]
 - 电机：[[02_code_twin/modules/MOTOR/motor_base]] / [[02_code_twin/modules/MOTOR/DJI/motor_dji]] / [[02_code_twin/modules/MOTOR/DAMIAO/motor_damiao]]
 - 遥控器输入：[[02_code_twin/apps/infantry3/single_board/robot_func/robot_func]]
 - 应用层调用：[[02_code_twin/apps/infantry3/single_board/robot_control]]
