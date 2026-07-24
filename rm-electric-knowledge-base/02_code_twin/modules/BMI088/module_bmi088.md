@@ -205,10 +205,3 @@ bmi088_device.gyro[i] = Calibrated ? val - GyroOffset[i] : val;
 ```
 
 > `AccelScale = 9.81 / gNorm`：标定时测到的重力模长不恰好是 9.81（有安装误差、传感器误差），用缩放因子把实测值校正到标准重力。
-
-## 被谁调用
-
-| 调用者 | 调用什么 | 链接 |
-|--------|---------|------|
-| `Module_Init()` | `Module_BMI088_init()` 一次性初始化 | [[03_moc/Robot-Init-Walkthrough#Module_Init()]] |
-| INS 线程 | 每周期 `get_accel()` + `get_gyro()` + `get_temp()` + `temp_ctrl()` | [[02_code_twin/modules/INS/module_ins]]（待写） |

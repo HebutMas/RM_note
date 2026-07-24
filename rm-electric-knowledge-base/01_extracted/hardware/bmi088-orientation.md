@@ -22,7 +22,7 @@
 
 ### 数据手册定义
 
-BMI088 数据手册标准方向定义（Pin1 在左下角、丝印正对阅读者时）详见 [[01_extracted/hardware/bmi088-datasheet#芯片坐标系（BMI088 数据手册定义）]]，本文不重复。
+BMI088 数据手册标准方向定义,详见[[01_extracted/hardware/bmi088-datasheet#芯片坐标系（数据手册定义）]]，本文不重复。
 
 ### 实际在c板中安装方向
 
