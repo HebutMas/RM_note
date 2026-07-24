@@ -130,7 +130,7 @@ USB 全速接口（FS, 12Mbps），可用于 USB 通信或 DFU 模式下载固�
 
 ### BMI088 六轴惯性测量单元
 
-> 出处：[[00_raw/hardware/RoboMaster  开发板 C 型用户手册.pdf#page=16|P.14]]，附表 [[00_raw/hardware/RoboMaster  开发板 C 型用户手册.pdf#page=19|P.18]]
+> 出处：[[00_raw/hardware/RoboMaster  开发板 C 型用户手册.pdf#page=17|P.15]]，附表 [[00_raw/hardware/RoboMaster  开发板 C 型用户手册.pdf#page=19|P.18]]
 
 抗震 BMI088，SPI 通信（SPI1），最大 10MHz。
 
