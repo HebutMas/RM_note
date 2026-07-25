@@ -4,17 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "eed636f623f0f855",
+        "id": "225130f3f5c3b003",
         "type": "tabs",
         "children": [
           {
-            "id": "c65834fc8a6996e3",
+            "id": "0c42bdbcb1e98b66",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "rm-electric-knowledge-base/01_extracted/motor/motor_params.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "新标签页"
+              "title": "motor_params"
             }
           }
         ]
@@ -177,8 +181,8 @@
             "state": {
               "type": "git-history-view",
               "state": {},
-              "icon": "history",
-              "title": "History"
+              "icon": "lucide-ghost",
+              "title": "git-history-view"
             }
           }
         ],
@@ -186,7 +190,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 531.5
+    "width": 200
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -200,8 +204,18 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "12d807417bfb36d6",
+  "active": "0c42bdbcb1e98b66",
   "lastOpenFiles": [
+    "rm-electric-knowledge-base/01_extracted/motor/images/MG8016E-i(工程大yaw)上位机参数/产品参数.png",
+    "rm-electric-knowledge-base/01_extracted/motor/motor_params.md",
+    "rm-electric-knowledge-base/00_raw/motors/DJI/GM6020/RoboMaster GM6020直流无刷电机使用说明20231013.pdf",
+    "rm-electric-knowledge-base/00_raw/motors/DAMIAO/调试助手使用说明书（达妙驱动控制协议）V1.4.pdf",
+    "rm-electric-knowledge-base/01_extracted/motor/lk_motor_def.h",
+    "rm-electric-knowledge-base/01_extracted/motor/images/MG8016E-i(工程大yaw)上位机参数/上位机参数2.jpg",
+    "rm-electric-knowledge-base/01_extracted/motor/images/MG8016E-i(工程大yaw)上位机参数/上位机参数3.jpg",
+    "rm-electric-knowledge-base/01_extracted/motor/images/MG8016E-i(工程大yaw)上位机参数/上位机参数1.jpg",
+    "rm-electric-knowledge-base/01_extracted/motor/images/MG8016E-i(工程大yaw)上位机参数",
+    "rm-electric-knowledge-base/01_extracted/motor/images/屏幕截图 2026-04-26 195150.png",
     "rm-electric-knowledge-base/00_raw/hardware/BMI088_Datasheet.pdf",
     "rm-electric-knowledge-base/00_raw/hardware/达妙科技DM-IMU-L1六轴IMU模块使用说明书V1.1.pdf",
     "mas_vision/MAS_Vision_弹道解算与射击控制教程.md",
@@ -228,25 +242,14 @@
     "02_code_twin/modules/MOTOR/DJI/motor_dji.md",
     "02_code_twin/apps/sentry/chassis_board/chassis_func/chassis_func.md",
     "02_code_twin/algorithm/lqr-state-feedback.md",
-    "02_code_twin/algorithm/pid-optimization.md",
     "00_raw/hardware/BMI088_Datasheet.pdf",
     "01_extracted/hardware/assets/Pasted image 20260724212855.png",
     "01_extracted/hardware/assets/Pasted image 20260724205536.png",
     "01_extracted/hardware/assets/fc-board-axes.png",
     "01_extracted/hardware/assets/gnss-module-axes.png",
     "01_extracted/hardware/assets/fc-board-axes.jpg",
-    "01_extracted/hardware/assets/gnss-module-axes.jpg",
-    "Pasted image 20260724214628.png",
-    "Pasted image 20260724213541.png",
-    "Pasted image 20260724212855.png",
-    "01_extracted/hardware/assets/bmi088-axis-annotated.jpg",
     "02_code_twin/algorithm",
     "clean_v1.py",
-    "01_extracted/cmake/fix_v1.py",
-    "01_extracted/cmake/fix_01.py",
-    "03_moc/fix_note.py",
-    "02_code_twin/cmake",
-    "01_extracted/hardware/assets",
-    "_historical/03_moc/sentry"
+    "01_extracted/cmake/fix_v1.py"
   ]
 }
