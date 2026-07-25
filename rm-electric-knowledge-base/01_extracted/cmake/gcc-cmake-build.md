@@ -434,6 +434,6 @@ add_subdirectory(../../utils ...)
 | 本质 | 粘贴到当前位置执行 | 进入子目录另起炉灶 |
 | 作用域 | 共享当前，变量直接生效 | 新建子作用域，变量不传回 |
 | target | 可以定义，但主要不是为了这个 | 子目录的 add_library 注册的 target 全局可见 |
-| 用在哪 | config.cmake / generate_headers.cmake（需要变量传回） | utils / modules / apps（只需要注册 target） |
+| 用在哪 | config.cmake（需要变量传回） | utils / modules / apps（只需要注册 target） |
 
 判断规则：需要在当前作用域共享变量 → `include()`；只需要注册一个 target → `add_subdirectory()`。

@@ -7,13 +7,18 @@
 
 ## 阅读顺序
 
-先看 [[02_code_twin/_vscode/tasks-json]]——它定义了构建按钮背后的一切。tasks.json 中的 `cmake -S` 参数决定了源码入口目录，从那里开始看本级 CMakeLists.txt，再跟着 `add_subdirectory` 和 `include` 逐层深入。
+先看 [[02_code_twin/_vscode/tasks-json]]——它定义了构建按钮背后的一切。tasks.json 中的 `cmake -S` 参数决定了源码入口目录，
 
-整条链路是单向的：tasks.json → CMakePresets → 工具链 → 板级 CMakeLists → 子模块。每一层只向下展开，不跳回来。
+以c板为例 [[02_code_twin/board/dji_c/CMakeLists-txt]] 
+
+从那里开始看板级 CMakeLists.txt，再跟着 `include` 和 `add_subdirectory` 逐层深入。
+
+整条链路是单向的：tasks.json → CMakePresets → 工具链 → 板级 CMakeLists → `board_common.cmake` → 子模块。
 
 ---
-
 ## 全流程概览
+
+建议随着笔记看完上两部分回头再来看,就清晰很多了
 
 ```
 tasks.json
@@ -25,88 +30,43 @@ CMakePresets.json          ← 打包工具链路径、构建类型、生成器
   │  toolchainFile → cmake/gcc-arm-none-eabi.cmake
   │  CMAKE_BUILD_TYPE = Debug
   ▼
-gcc-arm-none-eabi.cmake    ← 告诉 CMake 用 ARM 交叉编译器
-  │  设置 C/CXX 编译器、MCU flags、优化标志、链接器标志
+gcc-arm-none-eabi.cmake    ← 板级工具链文件，只设 MCU 差异参数
+  │  set(MCU_TARGET_FLAGS)   ← 板级差异：-mcpu / -mfpu / -mfloat-abi
+  │  set(MCU_LINKER_SCRIPT)  ← 板级差异：链接脚本路径
+  └→ include(../../cmake/gcc-arm-none-eabi-common.cmake)  ← 公共工具链逻辑
   ▼
-CMakeLists.txt (board/dji_c)   ← 项目入口，整个构建的指挥中心
-  │
-  ├─ include(config.cmake)           → 配置链（选机器人、选板型、设模块开关）
-  │    ├─ include(module_config.cmake)  → 默认参数
-  │    └─ include(sentry/robot.cmake) → 覆盖差异
-  │
-  ├─ include(generate_headers.cmake) → 把 CMake 变量翻译成 C 宏
-  │    ├─ file(WRITE robot_def.h)
-  │    └─ file(WRITE module_config.h)
-  │
-  ├─ project(base) + enable_language(C ASM)
-  ├─ add_executable(base)
-  │
-  ├─ add_subdirectory(cmake/stm32cubemx)   → CubeMX 生成代码
-  ├─ add_subdirectory(../../threadx)       → 第三方，暂不展开
-  ├─ include(../../CherryUSB/...)          → 第三方，暂不展开
-  ├─ add_subdirectory(../../CMSIS-DSP)     → 第三方，暂不展开
-  ├─ add_subdirectory(../../utils)         → 工具库
-  ├─ add_subdirectory(../../board/bsp)     → 硬件抽象层
-  ├─ add_subdirectory(../../robot)         → 机器人初始化
-  ├─ add_subdirectory(../../modules)       → 功能模块
-  ├─ add_subdirectory(../../apps)          → 应用层
-  │
-  ├─ target_link_libraries(base ...所有库...)
-  └─ target_link_options(base PRIVATE -flto)
-       │
-       ▼
-  base.elf + compile_commands.json
+CMakeLists.txt (board/dji_c)   ← 项目入口，只保留板级差异
+  │  project(base)
+  │  set(THREADX_ARCH cortex_m4)
+  └→ include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/board_common.cmake)
+      │
+      ├─ 加载配置链
+      │   ├─ include(config.cmake)           → 选机器人、选板型、设模块开关
+      │   │   ├─ include(module_config.cmake)  → 默认参数
+      │   │   └─ include(sentry/robot.cmake) → 覆盖差异
+      │   │
+      │   └─ configure_file 生成 C 头文件
+      │       ├─ configure_file(robot_def.h.in  → robot_def.h)     ← 模板生成
+      │       └─ configure_file(module_config.h.in → module_config.h) ← 模板生成
+      │
+      ├─ 添加子模块
+      │   ├─ add_subdirectory(cmake/stm32cubemx)   → CubeMX 生成代码
+      │   ├─ add_subdirectory(../../threadx)       → ThreadX RTOS
+      │   ├─ add_subdirectory(../../utils)         → 工具库
+      │   ├─ add_subdirectory(../../board/bsp)     → 硬件抽象层
+      │   ├─ add_subdirectory(../../robot)         → 机器人初始化
+      │   ├─ add_subdirectory(../../modules)       → 功能模块
+      │   └─ add_subdirectory(../../apps)          → 应用层
+      │
+      ├─ 链接全部
+      │   └─ target_link_libraries(base ...所有库...)
+      │
+      └─ 链接选项
+          └─ target_link_options(base PRIVATE -flto)
+               │
+               ▼
+          base.elf + compile_commands.json
 ```
 
 ---
 
-## 跳转深度
-
-从 tasks.json 出发，跟随 `add_subdirectory` 和 `include` 逐层深入，每一层只在 02 层有一篇笔记。缩进表示深入层级，箭头表示链接到 02 层的哪篇笔记：
-
-```
-_vscode/tasks.json
-  └→ [[02_code_twin/_vscode/tasks-json]]
-      │
-      ├─ --preset Debug
-      │   └→ board/dji_c/CMakePresets.json
-      │       └→ [[02_code_twin/board/dji_c/CMakePresets-json]]
-      │           │
-      │           └─ toolchainFile
-      │               └→ board/dji_c/cmake/gcc-arm-none-eabi.cmake
-      │                   └→ [[02_code_twin/board/dji_c/cmake/gcc-arm-none-eabi-cmake]]
-      │
-      └─ -S board/dji_c
-          └→ board/dji_c/CMakeLists.txt
-              └→ [[02_code_twin/board/dji_c/CMakeLists-txt]]
-                  │
-                  ├─ include(config.cmake)
-                  │   ├→ [[02_code_twin/apps/config-cmake]]
-                  │   │   ├─ include(module_config.cmake)
-                  │   │   │   └→ [[02_code_twin/modules/module_config-cmake]]
-                  │   │   └─ include(sentry/robot.cmake)
-                  │   │       └→ [[02_code_twin/apps/sentry/robot-cmake]]
-                  │   │
-                  │   └─ include(generate_headers.cmake)
-                  │       └→ [[02_code_twin/apps/generate_headers-cmake]]
-                  │
-                  ├─ add_subdirectory(cmake/stm32cubemx)
-                  │   └→ [[02_code_twin/board/dji_c/cmake/stm32cubemx/CMakeLists-txt]]
-                  │
-                  ├─ add_subdirectory(../../utils)
-                  │   └→ [[02_code_twin/utils/CMakeLists-txt]]
-                  │
-                  ├─ add_subdirectory(../../board/bsp)
-                  │   └→ [[02_code_twin/board/bsp/CMakeLists-txt]]
-                  │
-                  ├─ add_subdirectory(../../robot)
-                  │   └→ [[02_code_twin/robot/CMakeLists-txt]]
-                  │
-                  ├─ add_subdirectory(../../modules)
-                  │   └→ [[02_code_twin/modules/CMakeLists-txt]]
-                  │
-                  └─ add_subdirectory(../../apps)
-                      └→ [[02_code_twin/apps/CMakeLists-txt]]
-```
-
-每一层向下展开后不跳回来。子模块的 CMakeLists.txt 只负责创建自己的 target 和设置属性，不反向操作父级。最终所有 target 在板级 CMakeLists.txt 的 `target_link_libraries` 处汇总。
