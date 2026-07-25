@@ -42,15 +42,15 @@ build/
 
 ## 关键文件
 
-| 文件 | 产生阶段 | 用途 |
-|------|----------|------|
-| `build.ninja` | 阶段一（配置） | Ninja 读取此文件决定怎么编译、链接 |
-| `CMakeCache.txt` | 阶段一（配置） | 缓存编译器绝对路径，修改 PATH 后需删 build 目录才能刷新 |
-| `compile_commands.json` | 阶段三（构建） | 记录每个 `.c` 的编译命令，被搬运到 `build/` 供 clangd 读取 |
-| `base.elf` | 阶段三（构建） | 最终固件，被搬运到 `build/` 并改名 `dji_c.elf` |
-| `base.map` | 阶段三（构建） | 内存映射，查看每个符号在 Flash/RAM 中的位置和大小 |
-| `generated/module_config.h` | 阶段一（配置） | CMake 变量翻译成 C 宏，通过 `-include` 强制注入每个源文件 |
-| `generated/robot_def.h` | 阶段一（配置） | 机器人类型枚举宏 |
+| 文件                          | 产生阶段    | 用途                                        |
+| --------------------------- | ------- | ----------------------------------------- |
+| `build.ninja`               | 阶段一（配置） | Ninja 读取此文件决定怎么编译、链接                      |
+| `CMakeCache.txt`            | 阶段一（配置） | 缓存编译器绝对路径，修改 PATH 后需删 build 目录才能刷新        |
+| `compile_commands.json`     | 阶段三（构建） | 记录每个 `.c` 的编译命令，被搬运到 `build/` 供 clangd 读取 |
+| `base.elf`                  | 阶段三（构建） | 最终固件，被搬运到 `build/` 并改名 `dji_c.elf`        |
+| `base.map`                  | 阶段三（构建） | 内存映射，查看每个符号在 Flash/RAM 中的位置和大小            |
+| `generated/module_config.h` | 阶段一（配置） | CMake 变量翻译成 C 宏，通过 `-include` 强制注入每个源文件   |
+| `generated/robot_def.h`     | 阶段一（配置） | 机器人类型枚举宏                                  |
 
 > `libcherryusb.a`、`libthreadx.a` 是 STATIC 库的产物。其他模块（apps/bsp/modules 等）使用 OBJECT 库，不生成 `.a`，编译产物直接注入 `base.elf`。子目录（apps/、modules/ 等）里主要是 `CMakeFiles/` 和 `cmake_install.cmake`，都是 CMake 内部管理文件，无需关注。
 

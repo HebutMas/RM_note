@@ -1,81 +1,128 @@
 # CMake 基本语法
 
-> 纯语法操作，不涉及编译流程和 target 概念。就像学 C 语言先学变量、循环、判断。
+> 纯语法操作，不涉及编译流程和 target 概念。
 
 ---
 
 ## set - 设置变量
 
+普通变量只在当前作用域有效，CACHE 变量写进 `CMakeCache.txt` 跨配置保留。
+
 ```cmake
-set(MY_VAR "hello")              # 普通变量，当前作用域有效
-set(MY_VAR "val" CACHE STRING "描述" FORCE)  # 缓存变量，写进 CMakeCache.txt，跨配置保留
+set(<var> <value> [CACHE <type> <docstring> [FORCE]])
 ```
 
-普通变量就像 C 里的局部变量——出了作用域就没了。缓存变量写进 `CMakeCache.txt`，下次配置时还在。
+| 参数            | 填什么                         | 什么意思                               |
+| ------------- | --------------------------- | ---------------------------------- |
+| `<var>`       | `ROBOT`                     | 变量名                                |
+| `<value>`     | `"sentry"` 或 `"${OLD} new"` | 值，支持 `"${OLD_VAR} new_value"` 追加语法 |
+| `CACHE`       | 固定关键字                       | 可选，声明为缓存变量                         |
+| `<type>`      | `STRING` / `BOOL`           | 缓存变量类型（仅 CMake GUI 有用）             |
+| `<docstring>` | `"Target robot"`            | 缓存变量描述（仅 CMake GUI 有用）             |
+| `FORCE`       | 可选                          | 强制覆盖缓存中的旧值                         |
 
-`FORCE` 强制覆盖缓存中的旧值。本项目在设置 CherryUSB 配置项时用了：
+在项目中的实际展示：
 
 ```cmake
-# board/dji_c/CMakeLists.txt
+# board/dji_c/CMakeLists.txt — 缓存变量，强制覆盖
 set(CONFIG_CHERRYUSB_DEVICE ON CACHE BOOL "..." FORCE)
+
+# config.cmake — 变量名拼接
+string(TOUPPER ${BOARD} BOARD_UPPER)    # "single" → "SINGLE"
+set(${BOARD_UPPER}_BOARD 1)              # 等价于 set(SINGLE_BOARD 1)
 ```
 
-### 变量名拼接
+### 追加语法
+
+用 `${OLD_VAR} new_value` 在已有变量末尾追加内容。常用于累积编译选项和链接选项：
 
 ```cmake
-string(TOUPPER ${BOARD} BOARD_UPPER)   # "single" → "SINGLE"
-set(${BOARD_UPPER}_BOARD 1)             # 等价于 set(SINGLE_BOARD 1)
+# gcc-arm-none-eabi-common.cmake — 多次追加 CMAKE_C_FLAGS
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${TARGET_FLAGS}")       # 追加 MCU 架构标志
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -ffunction-sections")  # 追加通用标志
+# 最终 = "-mcpu=cortex-m3 -Wall -ffunction-sections"
 ```
 
-`${BOARD_UPPER}` 在 `set` 执行前被替换成 `SINGLE`，所以实际执行的是 `set(SINGLE_BOARD 1)`。
+第一次设时 `CMAKE_C_FLAGS` 为空，但写成追加语法可以保证多次 `set` 时不会覆盖前一次的值。
 
-### 覆盖机制
+### CACHE 变量 — 跨配置持久化
 
-config.cmake 先 `include` module_config.cmake 加载默认值，robot.cmake 再直接 `set` 覆盖：
 
 ```cmake
-# modules/module_config.cmake（默认值）
-set(OFFLINE_BEEP_ENABLE 1)
-
-# apps/sentry/robot.cmake（覆盖）
-set(OFFLINE_BEEP_ENABLE 0)
+# apps/config.cmake
+set(ROBOT "sentry" CACHE STRING "Target robot")
+set(BOARD "gimbal" CACHE STRING "Board role")
 ```
 
-CMake 的 `set()` 会覆盖当前作用域中已有的变量，后加载的生效。
+CACHE 变量以首次配置时的值为准。改了 config.cmake 默认值后，旧 build 目录不会自动更新，需要用 `-D` 覆盖或删 build 目录重新配置：
+
+```bash
+cmake -S board/dji_c -B build/dji_c/Debug -DROBOT=infantry3 -DBOARD=single
+```
+
+可选值限制仅用于 CMake GUI 显示下拉菜单，不限制命令行传值。实际校验靠：
+
+```cmake
+set_property(CACHE ROBOT PROPERTY STRINGS hero engineer infantry3 ...)
+if(NOT BOARD MATCHES "^(single|gimbal|chassis)$")
+    message(FATAL_ERROR "Unknown BOARD '${BOARD}'")
+endif()
+```
 
 ---
 
 ## string - 字符串操作
 
 ```cmake
-string(TOUPPER ${ROBOT} ROBOT_UPPER)   # "sentry" → "SENTRY"
-string(TOUPPER ${BOARD} BOARD_UPPER)   # "single" → "SINGLE"
+string(TOUPPER <input> <output_var>)
 ```
 
-`string(TOUPPER 输入 输出变量)` 把字符串转大写，结果存入输出变量。后面用 `ROBOT_${ROBOT_UPPER}` 拼接出 `ROBOT_SENTRY`。
+| 参数             | 填什么           | 什么意思  |
+| -------------- | ------------- | ----- |
+| `<input>`      | `"sentry"`    | 输入字符串 |
+| `<output_var>` | `ROBOT_UPPER` | 输出变量名 |
+|                |               |       |
+
+在项目中的实际展示：
+
+```cmake
+# apps/config.cmake — 转换机器人名称为大写，用于拼接宏
+string(TOUPPER ${ROBOT} ROBOT_UPPER)   # "sentry" → "SENTRY"
+```
 
 ---
 
 ## if - 条件判断
 
 ```cmake
-if(MODULE_BMI088)          # 变量值为 1/ON/TRUE 时为真
+if(<condition>)
     ...
-elseif(MODULE_REMOTE)
+elseif(<condition>)
     ...
 else()
     ...
 endif()
-
-if(EXISTS ${path})              # 路径存在
-if(NOT DEFINED THREADX_ARCH)    # 变量未定义
 ```
 
-本项目 `modules/CMakeLists.txt` 中大量使用 `if(MODULE_XXX)` 做条件编译：
+| 写法                             | 何时为真                |
+| ------------------------------ | ------------------- |
+| `if(MODULE_BMI088)`            | 变量值 = 1 / ON / TRUE |
+| `if(NOT DEFINED THREADX_ARCH)` | 变量未定义               |
+| `if(EXISTS ${path})`           | 路径存在                |
+| `if(BOARD STREQUAL "single")`  | 字符串相等               |
+| `if(TARGET CMSISDSP)`          | 目标已定义               |
+
+在项目中依靠cmake变量的值(1/0)条件添加需要编译的.c文件,注意与宏定义的条件编译区别
 
 ```cmake
+# modules/CMakeLists.txt — 模块开关控制条件编译
 if(MODULE_BMI088)
     list(APPEND _module_sources BMI088/module_bmi088.c)
+endif()
+
+# robot/CMakeLists.txt — 检查目标是否存在
+if(TARGET CMSISDSP)
+    target_link_libraries(robot PUBLIC CMSISDSP)
 endif()
 ```
 
@@ -83,26 +130,30 @@ endif()
 
 ## list - 列表操作
 
-CMake 里用空格分隔的字符串就是列表：
+CMake 中空格分隔的字符串就是列表。
 
 ```cmake
-set(_sources a.c b.c c.c)    # _sources 是一个列表，有三个元素
+list(APPEND <list> <element>)
+list(REMOVE_ITEM <list> <element>)
+list(REMOVE_DUPLICATES <list>)
 ```
 
+| 参数 | 填什么 | 什么意思 |
+|------|--------|----------|
+| `<list>` | `_sources` | 列表变量名 |
+| `<element>` | `a.c` | 要追加/删除的元素 |
+
+在项目中的实际展示：
+
 ```cmake
-list(APPEND _sources d.c)              # 尾部追加 → a.c b.c c.c d.c
-list(REMOVE_DUPLICATES _sources)       # 去重
-list(REMOVE_ITEM _sources b.c)         # 删除指定元素
-```
-
-本项目 `modules/CMakeLists.txt` 大量使用 `list(APPEND ...)` 做条件累加：
-
-```cmake
-set(_module_sources module_init.c algorithm/pid.c)  # 基础列表
-
+# modules/CMakeLists.txt — 条件累加源文件
+set(_module_sources module_init.c algorithm/pid.c)
 if(MODULE_BMI088)
-    list(APPEND _module_sources BMI088/module_bmi088.c)  # 条件追加
+    list(APPEND _module_sources BMI088/module_bmi088.c)
 endif()
+
+# board_common.cmake — 移除隐式链接库
+list(REMOVE_ITEM CMAKE_C_IMPLICIT_LINK_LIBRARIES ob)
 ```
 
 ---
@@ -110,29 +161,28 @@ endif()
 ## foreach - 循环
 
 ```cmake
+foreach(<var> <item1> <item2> ...)
+    ...
+endforeach()
+```
+
+| 参数 | 填什么 | 什么意思 |
+|------|--------|----------|
+| `<var>` | `_m` | 循环变量名 |
+| `<items>` | `OFFLINE REMOTE MOTOR` | 要遍历的列表 |
+
+在项目中的实际展示：
+
+```cmake
 # apps/config.cmake — 初始化所有模块开关为 0
 foreach(_m OFFLINE REMOTE BMI088 INS REFEREE SUPERCAP WT606 MOTOR VISION BOARDCOMM)
     set(MODULE_${_m} 0)
 endforeach()
-```
 
-等价于手写 10 行 `set(MODULE_OFFLINE 0)`、`set(MODULE_REMOTE 0)`...
-
-```cmake
-# 第二个 foreach：把启用的模块设为 1
-set(_enabled ${MODULES_${BOARD_UPPER}})   # 取出 MODULES_SINGLE 列表
+# apps/config.cmake — 把启用的模块设为 1
+set(_enabled ${MODULES_${BOARD_UPPER}})
 foreach(_m ${_enabled})
     set(MODULE_${_m} 1)
-endforeach()
-```
-
-### foreach 遍历文件提取路径
-
-```cmake
-# apps/CMakeLists.txt
-foreach(_h ${_robot_headers})
-    get_filename_component(_dir ${_h} DIRECTORY)  # 取文件所在目录
-    list(APPEND _robot_includes ${_dir})           # 加入头文件路径列表
 endforeach()
 ```
 
@@ -140,10 +190,19 @@ endforeach()
 
 ## file - 文件操作
 
-### file(WRITE) - 写文件
+### file(WRITE)
 
 ```cmake
-# apps/generate_headers.cmake
+file(WRITE <path> <content>)
+```
+
+| 参数 | 填什么 | 什么意思 |
+|------|--------|----------|
+| `<path>` | `${_generated_dir}/robot_def.h` | 输出文件路径 |
+| `<content>` | `"#define FOO 1\n"` | 写入的内容 |
+
+```cmake
+# 旧版 generate_headers.cmake
 file(WRITE ${_generated_dir}/robot_def.h
 "#ifndef _ROBOT_DEF_H_
 #define _ROBOT_DEF_H_
@@ -152,33 +211,46 @@ file(WRITE ${_generated_dir}/robot_def.h
 ")
 ```
 
-直接写一个头文件到磁盘。`${ROBOT_UPPER}` 在配置阶段被替换为 `SENTRY`。
-
 ### file(GLOB_RECURSE) - 递归扫描文件
 
-递归扫描 `apps/sentry/gimbal_board/` 下所有子目录的 `.c` 文件，收集到 `_robot_sources` 变量。
+```cmake
+file(GLOB_RECURSE <output_var> [CONFIGURE_DEPENDS] <globs>)
+```
 
-**实例:**
+| 参数                  | 填什么              | 什么意思           |
+| ------------------- | ---------------- | -------------- |
+| `<output_var>`      | `_robot_sources` | 输出列表变量名        |
+| `CONFIGURE_DEPENDS` | 可选               | 每次构建重新检查文件列表变化 |
+| `<globs>`           | `${dir}/*.c`     | 匹配模式           |
+
 ```cmake
 # apps/CMakeLists.txt
-file(GLOB_RECURSE _robot_sources ${_robot_board_dir}/*.c)
+file(GLOB_RECURSE _robot_sources CONFIGURE_DEPENDS ${_robot_board_dir}/*.c)
 ```
 
-```c
-// 伪代码：file(GLOB_RECURSE _robot_sources ${_robot_board_dir}/*.c)
-function collect_files(dir):
-    for each item in dir:
-        if item是文件夹:
-            collect_files(item)              // 递归进入子目录
-        else if item以 ".c" 结尾:
-            _robot_sources.push_back(item)   // 收集文件路径
-```
-从 `_robot_board_dir` 开始，像“地毯式搜索”一样遍历它和所有子孙文件夹，把碰到的每个 `.c` 文件的完整路径都存进 `_robot_sources` 这个列表里。
+---
 
-### get_filename_component - 提取路径组件
+## get_filename_component - 提取路径组件
 
 ```cmake
-get_filename_component(_dir ${_h} DIRECTORY)  # apps/foo/chassis/bar.h → apps/foo/chassis/
+get_filename_component(<output_var> <path> <mode>)
+```
+
+| 参数             | 填什么                               | 什么意思  |
+| -------------- | --------------------------------- | ----- |
+| `<output_var>` | `MAS_ROOT`                        | 输出变量名 |
+| `<path>`       | `${CMAKE_CURRENT_LIST_DIR}/..`    | 输入路径  |
+| `<mode>`       | `DIRECTORY` / `NAME` / `ABSOLUTE` | 提取模式  |
+
+| 模式 | 作用 | 示例 |
+|------|------|------|
+| `DIRECTORY` | 取目录部分 | `E:/a/b/c.txt` → `E:/a/b` |
+| `NAME` | 取文件名部分 | `E:/a/b/c.txt` → `c.txt` |
+| `ABSOLUTE` | 转绝对路径 | `../a/b` → `E:/project/a/b` |
+
+```cmake
+# cmake/board_common.cmake — 计算仓库根目录绝对路径
+get_filename_component(MAS_ROOT ${CMAKE_CURRENT_LIST_DIR}/.. ABSOLUTE)
 ```
 
 ---
@@ -186,7 +258,18 @@ get_filename_component(_dir ${_h} DIRECTORY)  # apps/foo/chassis/bar.h → apps/
 ## function - 自定义函数
 
 ```cmake
-# apps/generate_headers.cmake
+function(<name> <arg1> <arg2> ...)
+    ...
+endfunction()
+```
+
+| 参数 | 填什么 | 什么意思 |
+|------|--------|----------|
+| `<name>` | `_gen_cmakedefine` | 函数名 |
+| `<args>` | `OUT_VAR NAME VALUE_VAR` | 形参列表 |
+
+```cmake
+# 旧版 generate_headers.cmake — 模拟 #cmakedefine 行为
 function(_gen_cmakedefine OUT_VAR NAME VALUE_VAR)
     if(DEFINED ${VALUE_VAR}
        AND NOT "${${VALUE_VAR}}" STREQUAL ""
@@ -198,28 +281,114 @@ function(_gen_cmakedefine OUT_VAR NAME VALUE_VAR)
 endfunction()
 ```
 
-模拟 CMake 的 `#cmakedefine` 行为：变量有值就生成 `#define NAME value`，否则生成 `/* #undef NAME */`。
-
 `PARENT_SCOPE` 是因为函数有自己的作用域，`set` 默认只改函数内部变量，加 `PARENT_SCOPE` 才能把结果传回调用者。
 
 ---
 
 ## include - 粘贴到当前位置
 
+把指定文件的内容**粘贴到当前位置执行**，共享当前作用域，变量直接生效。
+
 ```cmake
-# board/dji_c/CMakeLists.txt
-include(${CMAKE_SOURCE_DIR}/../../apps/config.cmake)
+include(<path>)
 ```
 
-`include()` 把指定文件的内容**粘贴到当前位置执行**，共享当前作用域，变量直接生效。执行完后回到下一行继续。
+| 参数       | 填什么                             | 什么意思            |
+| -------- | ------------------------------- | --------------- |
+| `<path>` | `${MAS_ROOT}/apps/config.cmake` | 要执行的 CMake 文件路径 |
 
-### include 的展开链
+```cmake
+# cmake/board_common.cmake — 加载配置链
+include(${MAS_ROOT}/apps/config.cmake)
+```
 
 ```
-板级 CMakeLists.txt
+board_common.cmake
   └─ include(config.cmake)
-       ├─ include(module_config.cmake)    ← 加载默认参数
-       └─ include(sentry/robot.cmake)  ← 加载差异配置
-            └─ include(module_config.cmake)  ← 重复 include，幂等不重复执行
+       ├─ include(module_config.cmake)   ← 默认参数
+       └─ include(sentry/robot.cmake)    ← 差异覆盖
 ```
 
+---
+
+## configure_file - 模板替换生成文件
+
+把 `.h.in` 模板中的 `@VAR@` 替换为 CMake 变量值，生成 `.h` 头文件。
+
+```cmake
+configure_file(<input> <output> [@ONLY])
+```
+
+| 参数         | 填什么                               | 什么意思                     |
+| ---------- | --------------------------------- | ------------------------ |
+| `<input>`  | `${MAS_ROOT}/apps/robot_def.h.in` | 模板文件路径，含 `@VAR@` 占位符     |
+| `<output>` | `${_generated_dir}/robot_def.h`   | 生成的头文件路径                 |
+| `@ONLY`    | 固定关键字                             | 只替换 `@VAR@`，不替换 `${VAR}` |
+
+```cmake
+# cmake/board_common.cmake
+configure_file(${MAS_ROOT}/apps/robot_def.h.in ${_generated_dir}/robot_def.h @ONLY)
+configure_file(${MAS_ROOT}/apps/module_config.h.in ${_generated_dir}/module_config.h @ONLY)
+```
+
+模板中支持两种语法：
+
+| 模板语法 | 行为 |
+|---------|------|
+| `@VAR@` | 无条件替换为 CMake 变量值，变量不存在时报错 |
+| `#cmakedefine VAR @VAR@` | 变量存在且非假值时生成 `#define`，否则生成 `/* #undef */` |
+
+```c
+// module_config.h.in 模板
+#define MODULE_REMOTE @MODULE_REMOTE@
+#cmakedefine REMOTE_UART @REMOTE_UART@
+```
+
+`MODULE_REMOTE=1`、`REMOTE_UART=huart4` 时生成：
+
+```c
+#define MODULE_REMOTE 1
+#define REMOTE_UART huart4
+```
+
+`#cmakedefine` 判定规则：变量已定义，且值不为 `FALSE` / `OFF` / `0` / `N` / `IGNORE` / `NOTFOUND` 之一时生成 `#define`，否则生成 `/* #undef */`。
+
+---
+
+## CONFIGURE_DEPENDS - 自动检测文件变化
+
+```cmake
+file(GLOB_RECURSE <output_var> CONFIGURE_DEPENDS <globs>)
+```
+
+不加 `CONFIGURE_DEPENDS` 时，`GLOB_RECURSE` 只在 `cmake -S ...` 配置时扫描一次。之后新增 `.c` 文件，CMake 不会知道，必须手动重新配置。
+
+加上后，每次构建时 Ninja 检查文件列表是否有变化，有变化就自动重新配置。
+
+```cmake
+# apps/CMakeLists.txt
+file(GLOB_RECURSE _robot_sources CONFIGURE_DEPENDS ${_robot_board_dir}/*.c)
+```
+
+---
+
+## message - 打印信息
+
+```cmake
+message([<mode>] <text>)
+```
+
+| 模式 | 行为 |
+|------|------|
+| （无） | 普通信息，继续执行 |
+| `FATAL_ERROR` | 打印后停止配置 |
+
+```cmake
+# board_common.cmake — 打印构建类型
+message("Build type: " ${CMAKE_BUILD_TYPE})
+
+# config.cmake — 校验 BOARD 值，非法时停止
+if(NOT BOARD MATCHES "^(single|gimbal|chassis)$")
+    message(FATAL_ERROR "Unknown BOARD '${BOARD}'")
+endif()
+```

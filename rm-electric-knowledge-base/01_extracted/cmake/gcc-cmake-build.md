@@ -335,23 +335,48 @@ INTERFACE 同上，宏定义只传给上层。CMake 推荐用 `target_compile_de
 
 ### target_compile_options - 编译器选项
 
-给编译器传编译选项，如优化等级 `-O2`、强制包含 `-include` 等。
+给编译器传编译选项，作用于预处理+编译+汇编阶段。不参与链接阶段。
 
 ```cmake
 target_compile_options(<target> [PRIVATE|PUBLIC|INTERFACE] <option1> <option2> ...)
 ```
 
-| 参数 | 填什么 | 什么意思 |
-|------|--------|----------|
-| `<target>` | `utils` | 给哪个目标配编译选项 |
-| 关键字 | `PRIVATE` | 选项只自己用，上层不继承 |
-| `option...` | `-O2` | 优化等级。`-include module_config.h` 是特殊选项，等价于在每个 `.c` 文件第一行自动加 `#include "module_config.h"`，这样源代码里的 `#if MODULE_BMI088` 守卫才能正确判断 |
+| 参数          | 填什么                                       | 什么意思                                                                                                                                     |
+| ----------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `<target>`  | `utils` / `cherryusb`                     | 给哪个目标配编译选项                                                                                                                               |
+| 关键字         | `PRIVATE` / `PUBLIC` / `INTERFACE`        | `PRIVATE` 只自己用，`PUBLIC` 给链接者继承，`INTERFACE` 只给链接者用                                                                                        |
+| `option...` | `-O2` / `-O3 -ffast-math -fno-math-errno` | 编译器选项，空格分隔。详见下方优化等级和调试信息等级说明 |
 
 ```cmake
+# board_common.cmake — 标准优化，每个模块自己决定优化等级
 target_compile_options(utils PRIVATE -O2)
+
+# board_common.cmake — 激进优化，CherryUSB 和 CMSIS-DSP 需要性能
+target_compile_options(cherryusb PRIVATE -O3 -ffast-math -fno-math-errno)
+target_compile_options(CMSISDSP PRIVATE -O3 -ffast-math -fno-math-errno -flto)
 ```
 
-PRIVATE 因为 `-O2` 只在编译 utils 自己的 `.c` 时生效，上层不继承——每个模块自己决定优化等级。
+### 优化等级 `-O0` ~ `-O3`
+
+| 等级 | 含义 | 速度 | 体积 | 调试 | 项目用在哪 |
+|------|------|------|------|------|----------|
+| `-O0` | 无优化 | 最慢 | 最大 | 最佳 | DEBUG 模式默认 |
+| `-Os` | 优化体积 | 中等 | 最小 | 一般 | RELEASE 模式默认 |
+| `-O2` | 标准优化 | 较快 | 中等 | 下降 | utils 等通用模块 |
+| `-O3` | 激进优化 | 最快 | 较大 | 差 | CherryUSB、CMSIS-DSP 等性能敏感模块 |
+
+`-O0` 不优化，变量不会被优化掉，GDB 单步时能看到所有值。`-O3` 会做函数内联、循环展开等激进优化，调试时变量可能被优化掉看不到。
+
+### 调试信息等级 `-g0` ~ `-g3`
+
+| 等级 | 含义 | 体积 | 调试 |
+|------|------|------|------|
+| `-g0` | 无调试信息 | 最小 | GDB 无法定位源码行 |
+| `-g1` | 仅函数名和行号 | 小 | 可以打断点，但看不到局部变量 |
+| `-g2` | 完整调试信息（默认） | 大 | 可以看所有变量和堆栈 |
+| `-g3` | 完整调试信息 + 宏定义 | 最大 | 比 `-g2` 多了 `#define` 宏可见 |
+
+项目里 DEBUG 用 `-g3`（宏也可见），RELEASE 用 `-g0`（不生成调试信息，减少体积）。
 
 ### target_link_libraries - 链接哪些库
 
@@ -383,23 +408,27 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 
 ### target_link_options - 链接器选项
 
-给链接器传选项，如 `-flto` 链接时优化、`-T` 链接器脚本。和 `target_compile_options` 的区别：一个控制编译器（预处理+编译+汇编阶段），一个控制链接器（最终合并阶段）。
+给链接器传选项，作用于最终链接阶段。和 `target_compile_options` 的区别：一个控制编译器（预处理+编译+汇编阶段），一个控制链接器（最终合并阶段）。
 
 ```cmake
 target_link_options(<target> [PRIVATE|PUBLIC|INTERFACE] <option1> <option2> ...)
 ```
 
-| 参数 | 填什么 | 什么意思 |
-|------|--------|----------|
-| `<target>` | `${CMAKE_PROJECT_NAME}` | 给哪个目标配链接选项 |
-| 关键字 | `PRIVATE` | 选项只自己用 |
-| `option...` | `-flto` | 链接时优化（LTO），让编译器在合并所有 `.o` 后做一次跨文件内联和死代码消除 |
+| 参数          | 填什么                           | 什么意思                                                                                 |
+| ----------- | ----------------------------- | ------------------------------------------------------------------------------------ |
+| `<target>`  | `${CMAKE_PROJECT_NAME}`       | 给哪个目标配链接选项                                                                           |
+| 关键字         | `PRIVATE`                     | 选项只自己用，最终产物没有上层                                                                      |
+| `option...` | `-flto` / `-Wl,--gc-sections` | 链接器选项。`-flto` 做跨模块优化+死代码消除；`-Wl,--gc-sections` 丢弃未引用的段，必须配合 `-ffunction-sections` 使用 |
+|             |                               |                                                                                      |
 
 ```cmake
-target_link_options(${CMAKE_PROJECT_NAME} PRIVATE -flto)
+# board_common.cmake — 最终链接
+ target_link_options(${CMAKE_PROJECT_NAME} PRIVATE -flto)
 ```
 
-PRIVATE 因为链接选项只有最终链接 base.elf 时才用。`-flto` 让编译器跨模块边界做优化。
+`-flto` 在链接阶段做一次跨文件分析和内联，配合 `-ffunction-sections` + `-Wl,--gc-sections` 可以移除未引用的函数和数据，减小固件体积。
+
+> 注意：`-flto` 是编译器选项也是链接器选项。编译阶段加 `-flto` 把中间表示写入 `.o` 文件，链接阶段再加 `-flto` 触发跨模块优化。项目里 CMSIS-DSP 编译时加了 `-flto`，base.elf 链接时也加了 `-flto`，两端都开才能生效。
 
 ---
 
@@ -415,15 +444,19 @@ add_subdirectory(source_dir [binary_dir] [EXCLUDE_FROM_ALL])
 
 | 参数 | 填什么 | 什么意思 |
 |------|--------|----------|
-| `source_dir` | `cmake/stm32cubemx` 或 `../../utils` | 子目录的源码路径，相对当前 CMakeLists.txt |
-| `binary_dir` | `...`（省略时自动命名） | 构建产物目录名，相对 `CMAKE_BINARY_DIR`。`../../` 从 `board/dji_c/` 向上穿越两级回到项目根目录 |
+| `source_dir` | `cmake/stm32cubemx` 或 `${MAS_ROOT}/utils` | 子目录的源码路径。**相对当前 CMakeLists.txt 所在目录解析**（不是 `CMAKE_CURRENT_SOURCE_DIR`），也可以用绝对路径 |
+| `binary_dir` | `...`（省略时自动命名） | 构建产物目录，相对当前 `CMAKE_BINARY_DIR`。**必须指定**的情况：source_dir 用了绝对路径或跨层级路径时，CMake 无法自动推断 binary_dir 名字 |
 
 ```cmake
-add_subdirectory(cmake/stm32cubemx)
-add_subdirectory(../../utils ...)
+# board_common.cmake — 被 include 进来的，CMAKE_CURRENT_SOURCE_DIR 仍是板目录
+add_subdirectory(cmake/stm32cubemx)              # 同级目录，CMake 自动命名
+add_subdirectory(${MAS_ROOT}/threadx threadx)    # 跨层级，必须指定 binary_dir
+add_subdirectory(${MAS_ROOT}/utils ${CMAKE_CURRENT_BINARY_DIR}/utils)  # 跨层级 + 自定义构建目录名
 ```
 
-第一个单参数——子目录在当前目录下，构建目录自动命名。第二个双参数——子目录在项目根目录下（穿越两级），第二个参数指定构建目录名。
+第一个单参数——子目录在板目录下（`board/dji_c/cmake/stm32cubemx`），CMake 自动命名构建目录为 `build/dji_c/Debug/cmake/stm32cubemx`。
+
+后两个双参数——source_dir 用 `MAS_ROOT` 绝对路径，必须手动指定 binary_dir。项目里统一用 `${CMAKE_CURRENT_BINARY_DIR}/模块名` 的命名方式。
 
 ### 对比 include
 

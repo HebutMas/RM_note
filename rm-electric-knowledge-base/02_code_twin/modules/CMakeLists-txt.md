@@ -57,7 +57,10 @@ endif()
 if(MODULE_REMOTE)
     list(APPEND _module_sources
         REMOTE/module_remote.c
-        REMOTE/module_remote_vt.c
+        REMOTE/SBUS/sbus.c
+        REMOTE/DT7/dt7.c
+        REMOTE/VT02/vt02.c
+        REMOTE/VT03/vt03.c
     )
     ...
 endif()
@@ -68,11 +71,12 @@ endif()
 ### 生成头文件目录定位
 
 ```cmake
-get_filename_component(_board_binary_dir ${CMAKE_CURRENT_BINARY_DIR} DIRECTORY)
-set(_generated_dir ${_board_binary_dir}/generated)
+if(NOT DEFINED _generated_dir)
+    message(FATAL_ERROR "_generated_dir is not defined; modules must be added via cmake/board_common.cmake")
+endif()
 ```
 
-`CMAKE_CURRENT_BINARY_DIR` 是 `build/dji_c/Debug/modules/`，`DIRECTORY` 取上一级得到 `build/dji_c/Debug/`，拼 `/generated` 就是 `module_config.h` 所在目录。
+`_generated_dir` 由 [[02_code_twin/cmake/board_common-cmake#配置系统加载]] 在 `board_common.cmake` 中设置，通过目录作用域继承到 `modules/` 子目录。如果 `modules` 不是通过 `board_common.cmake` 添加的（比如直接 `add_subdirectory`），`_generated_dir` 未定义，配置阶段直接报错。
 
 ### 建库 + 强制注入配置头文件
 
@@ -88,7 +92,7 @@ target_link_libraries(modules PUBLIC stm32cubemx azrtos::threadx m CMSISDSP bsp 
 
 
 **特别注意的**
-- `module_config.h` 是由 [[02_code_twin/board/dji_c/CMakeLists-txt#配置系统加载]] 中 `include(generate_headers.cmake)` 调用 [[02_code_twin/apps/generate_headers-cmake]] 把 CMake 变量自动转成宏定义生成的 `.h` 文件
+- `module_config.h` 由 [[02_code_twin/cmake/board_common-cmake]] 中的 `configure_file(module_config.h.in → module_config.h)` 生成，详见 [[02_code_twin/apps/module_config-h-in]]
 
 链接回 01 层：
 - `add_library(OBJECT)` → [[01_extracted/cmake/gcc-cmake-build#add_library(OBJECT) - .o 直接注入 elf]]（变量传入的混合写法）

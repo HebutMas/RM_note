@@ -31,11 +31,11 @@ _robot_board_dir = apps/sentry/gimbal_board/
 ```cmake
 set(_robot_sources "")
 if(EXISTS ${_robot_board_dir})
-    file(GLOB_RECURSE _robot_sources ${_robot_board_dir}/*.c)
+    file(GLOB_RECURSE _robot_sources CONFIGURE_DEPENDS ${_robot_board_dir}/*.c)
 endif()
 ```
 
-`file(GLOB_RECURSE)` 递归扫描 `apps/sentry/gimbal_board/` 下所有子目录的 `.c` 文件。往这个目录里加新文件不需要改 CMakeLists.txt。详见 [[01_extracted/cmake/cmake-basic-syntax#file(GLOB_RECURSE) - 递归扫描文件]]
+`file(GLOB_RECURSE)` 递归扫描 `apps/sentry/gimbal_board/` 下所有子目录的 `.c` 文件。`CONFIGURE_DEPENDS` 让 Ninja 每次构建时检查文件列表变化，新增 `.c` 文件自动重新配置。详见 [[01_extracted/cmake/cmake-basic-syntax#file(GLOB_RECURSE) - 递归扫描文件]]
 
 ### 自动收集头文件路径
 
@@ -52,7 +52,7 @@ endif()
 
 ```cmake
 if(EXISTS ${_robot_board_dir})
-    file(GLOB_RECURSE _robot_headers ${_robot_board_dir}/*.h)
+    file(GLOB_RECURSE _robot_headers CONFIGURE_DEPENDS ${_robot_board_dir}/*.h)
     list(APPEND _robot_includes ${_robot_board_dir})
     foreach(_h ${_robot_headers})
         get_filename_component(_dir ${_h} DIRECTORY)
@@ -82,9 +82,12 @@ target_compile_options(app PRIVATE -O2 -include module_config.h)
 target_include_directories(app PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${_robot_includes}
+    ${_generated_dir}
 )
 
 target_link_libraries(app PUBLIC stm32cubemx azrtos::threadx utils bsp CMSISDSP modules)
+
+`${_generated_dir}` 是 `board_common.cmake` 中设置的构建目录下的 `generated/` 文件夹，包含 `module_config.h` 和 `robot_def.h`，确保业务代码能 `#include` 这些自动生成的头文件。
 ```
 
 - `add_library(OBJECT)` → [[01_extracted/cmake/gcc-cmake-build#add_library(OBJECT) - .o 直接注入 elf]]

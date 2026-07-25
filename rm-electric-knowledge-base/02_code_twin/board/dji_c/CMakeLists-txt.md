@@ -3,7 +3,7 @@
 ## 文件位置
 
 `mas_embedded_threadx/board/dji_c/CMakeLists.txt`
-
+	
 ## 作用
 
 整个项目的构建入口。[[02_code_twin/_vscode/tasks-json]] 中Build dji_c所执行的命令其中的部分代码 `cmake -S ${workspaceFolder}/board/dji_c` 指向的就是这个文件。
