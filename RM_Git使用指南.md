@@ -162,7 +162,8 @@ gh repo fork HebutMas/rm_control --clone                   # 一键 fork 并 clo
 
 ```bash
 # 1. 拉取最新代码（开始工作前必做！）
-git pull
+git status
+git pull --ff-only
 
 # 2. 写代码...写代码...写代码...
 
@@ -170,9 +171,9 @@ git pull
 git status
 
 # 4. 添加到暂存区
-git add .                    # 添加所有改动
-# 或
-git add src/main.c           # 只添加特定文件
+git add 本次修改的文件
+# 例如
+git add src/main.c
 
 # 5. 提交（写好注释！）
 git commit -m "feat: 底盘PID参数整定完成"
@@ -180,6 +181,10 @@ git commit -m "feat: 底盘PID参数整定完成"
 # 6. 推送到 GitHub
 git push
 ```
+
+`git pull` 等价于 `git fetch` + `git merge`。如果本地分支只是落后于远程分支，可以直接快进到最新版本；如果本地和远程已经分叉，普通 `git pull` 可能生成额外的 merge commit。同步 `main` / `dev` 这类主线分支时，使用 `--ff-only` 可以在分叉时直接拒绝，让你先检查本地是否误提交到了主线。
+
+不建议默认使用 `git add .`，除非已经确认当前目录下所有改动都属于本次提交。提交前先 `git status`，再只添加本次要提交的文件。
 
 > **写完一个功能就 commit，不要攒一天再提交！** 一个 commit 只做一件事——写完云台 PID 就 commit 一次，写完底盘功率再 commit 一次。这样出问题能精确回滚，Code Review 也看得过来。
 
@@ -279,11 +284,14 @@ type 可选值：
 ```bash
 # 从最新的 dev 创建功能分支
 git checkout dev
-git pull origin dev
+git fetch origin
+git merge --ff-only origin/dev
 git checkout -b feature/云台PID控制
 
 # 写代码...小步 commit...
-git add . && git commit -m "feat: 云台PID角度环实现"
+git status
+git add 本次修改的文件
+git commit -m "feat: 云台PID角度环实现"
 ```
 
 ### 开发完合并后删除分支
@@ -293,7 +301,8 @@ git add . && git commit -m "feat: 云台PID角度环实现"
 ```bash
 # 合并完成后
 git checkout dev                           # 切回 dev
-git pull origin dev                        # 拉取包含你代码的最新 dev
+git fetch origin
+git merge --ff-only origin/dev             # 拉取包含你代码的最新 dev
 git branch -d feature/云台PID控制           # 删除本地分支
 git push origin --delete feature/云台PID控制  # 删除远程分支
 ```
@@ -362,7 +371,7 @@ git merge origin/dev                # 把 origin/dev 合并进你的分支
 
 # 如果无冲突 → Git 自动生成 merge commit，完成
 # 如果有冲突 → 手动解决 → git add → git commit
-git add .
+git add 已解决冲突的文件
 git commit -m "merge: 同步 dev 最新代码"
 git push
 ```
@@ -480,6 +489,8 @@ OzoneSettings.jdebug
 
 战队成员分两种角色，协作流程不同：
 
+本地 `dev` 不是开发分支，而是主仓库 `dev` 的干净副本。普通成员的本地 `dev` 来自 `upstream/dev`，Owner 的本地 `dev` 来自 `origin/dev`。日常开发必须从干净 `dev` 新建 `feature/*` 分支，修改、解决冲突、测试和推送都发生在 `feature/*` 分支上；需要 PR 时，也从 `feature/*` 发起 PR，不把 `feature/*` 先合回本地 `dev` 再提交。
+
 ### Member（普通成员）— Fork 模式
 
 普通成员没有主仓库的直接写入权限，需要先 fork 到自己的 GitHub 账号下开发，测试通过后 PR 回主仓库。
@@ -493,42 +504,62 @@ cd mas_embedded_threadx
 # 3. 添加战队仓库为 upstream（用于同步最新代码）
 git remote add upstream https://github.com/HebutMas/mas_embedded_threadx.git
 
-# 4. 从最新的 dev 创建功能分支
+# 4. 同步本地 dev，让它成为 upstream/dev 的干净副本
 git checkout dev
 git fetch upstream
-git merge upstream/dev              # 同步上游 dev 的最新代码
+git merge --ff-only upstream/dev
+
+# 5. 从干净 dev 创建功能分支
 git checkout -b feature/云台PID控制
 
-# 5. 写代码...小步 commit...
-git add . && git commit -m "feat: 云台PID角度环实现"
+# 6. 在 feature 分支开发，小步 commit
+git status
+git add 本次修改的文件
+git commit -m "feat: 云台PID角度环实现"
 
-# 6. 推到自己的 fork
+# 7. 推到自己的 fork
 git push -u origin feature/云台PID控制
 
-# 7. 去 GitHub 网页上向主仓库发 PR（base: dev, compare: feature/云台PID控制）
+# 8. 去 GitHub 网页上向主仓库发 PR
+# base: 主仓库 dev
+# compare: 自己 fork 的 feature/云台PID控制
+```
+
+开发期间如果主仓库 `dev` 更新了，在 `feature/*` 分支上同步：
+
+```bash
+git fetch upstream
+git checkout feature/云台PID控制
+git merge upstream/dev
+# 如有冲突，在 feature 分支解决冲突并测试
+git push origin feature/云台PID控制
 ```
 
 ### Owner（仓库管理员）— 主仓库分支模式
 
-Owner 有主仓库的直接写入权限，**不需要 fork**，但**仍然不能直接在 dev 上写代码**。流程是：在主仓库开 feature 分支 → push → merge 到 dev → 删分支。
+Owner 有主仓库的直接写入权限，**不需要 fork**，但**仍然不能直接在 dev 上写代码**。本地 `dev` 仍然只作为 `origin/dev` 的干净副本，开发时也要从 `dev` 新建 `feature/*` 分支。
 
 ```bash
-# 1. 确保从最新的 dev 起步
+# 1. 同步本地 dev，让它成为 origin/dev 的干净副本
 git checkout dev
-git pull origin dev
+git fetch origin
+git merge --ff-only origin/dev
 
 # 2. 创建功能分支
 git checkout -b feature/底盘功率控制
 
-# 3. 写代码...小步 commit...
-git add . && git commit -m "feat: 添加功率限制核心逻辑"
+# 3. 在 feature 分支开发，小步 commit
+git status
+git add 本次修改的文件
+git commit -m "feat: 添加功率限制核心逻辑"
 
 # 4. 推到主仓库的 feature 分支
 git push -u origin feature/底盘功率控制
 
 # 5. 验证通过后，合并到 dev
 git checkout dev
-git pull origin dev                 # 再拉一次，防止期间有人更新了 dev
+git fetch origin
+git merge --ff-only origin/dev      # 再同步一次，防止期间有人更新了 dev
 git merge feature/底盘功率控制
 git push origin dev
 
@@ -622,7 +653,8 @@ git push --force-with-lease
 | 直接在 dev 上写代码 | 难以隔离，push 时可能被拒 | 写代码前先 `git branch` 确认当前分支 |
 | push 前没同步 dev | PR 冲突多，CI 可能基于旧代码测试 | PR 页面的 "out-of-date" 警告 |
 | rebase 后用了 `--force` | 可能默默覆盖队友的 commit | 永远只用 `--force-with-lease` |
-| 忘记 pull 就开始写 | 基于过时代码开发 | 把 `git pull` 当肌肉记忆，坐下就先拉 |
+| 忘记同步主线就开始写 | 基于过时代码开发 | 开始开发前先同步 `main` / `dev`，再创建 `feature/*` 分支 |
+| 随手 `git add .` | 把临时文件、IDE 配置、无关改动一起提交 | 先 `git status`，再 `git add` 指定文件 |
 | 一个 commit 改了几十个文件 | 无法回滚、无法 bisect | 一个 commit 只做一件事 |
 | 合并完不删分支 | 仓库一堆废弃分支 | 合并后立即删本地+远程分支 |
 
@@ -761,7 +793,9 @@ cd rm_control.wiki
 
 # 写 Markdown 文件 → push → 自动更新 Wiki 页面
 echo "# 底盘调参手册" > 底盘调参手册.md
-git add . && git commit -m "docs: 初始化底盘调参手册"
+git status
+git add 底盘调参手册.md
+git commit -m "docs: 初始化底盘调参手册"
 git push
 ```
 
