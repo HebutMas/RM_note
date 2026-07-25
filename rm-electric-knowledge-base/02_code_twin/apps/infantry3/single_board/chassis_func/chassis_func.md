@@ -34,7 +34,7 @@ static const Chassis_Diff_Config_s chassis_diff_config = {
 };
 ```
 
-`Chassis_Diff_Config_s` 定义见 [[02_code_twin/algorithm/chassis_type]]。
+`Chassis_Diff_Config_s` 定义见 [[02_code_twin/modules/algorithm/chassis_type]]。
 
 ### 控制器配置
 
@@ -124,6 +124,6 @@ chassis_vy = cmd.vx * sin_theta + cmd.vy * cos_theta;
 Chassis_Mecanum_Calc(motors, config, vx, vy, vw);
 ```
 
-把底盘速度向量分解为 4 个轮子的目标速度（rad/s），直接写入 `Motor_DJI_SetRef`。实现在 `modules/algorithm/chassis_type.c`，详见 [[02_code_twin/algorithm/chassis_type]]。
+把底盘速度向量分解为 4 个轮子的目标速度（rad/s），直接写入 `Motor_DJI_SetRef`。实现在 `modules/algorithm/chassis_type.c`，详见 [[02_code_twin/modules/algorithm/chassis_type]]。
 
 ---
