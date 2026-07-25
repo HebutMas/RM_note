@@ -723,17 +723,17 @@ git cherry-pick abc1234^..def5678          # 搬一段连续的 commit（含 sta
 
 ### 急救命令速查表
 
-| 事故 | 命令 |
-|:-----|:-----|
-| commit 漏文件 | `git commit --amend --no-edit` |
-| commit message 写错 | `git commit --amend -m "新信息"` |
-| 在主分支上误写代码 | `git checkout -b 新分支` → `git checkout dev` → `git reset --hard origin/dev` |
-| 写到一半要切分支 | `git stash` → 处理完 → `git stash pop` |
-| 误删 commit / reset 后悔 | `git reflog` → `git checkout -b 恢复 <hash>` |
-| 找到引入 bug 的 commit | `git bisect start` → `bisect bad`/`good` |
-| 搬指定 commit 到当前分支 | `git cherry-pick <hash>` |
-| 放弃正在进行的 merge | `git merge --abort` |
-| 已 push 的错误 commit 要覆盖 | `git commit --amend` → `git push --force-with-lease` |
+| 事故                    | 命令                                                                         |
+| :-------------------- | :------------------------------------------------------------------------- |
+| commit 漏文件            | `git commit --amend --no-edit`                                             |
+| commit message 写错     | `git commit --amend -m "新信息"`                                              |
+| 在主分支上误写代码             | `git checkout -b 新分支` → `git checkout dev` → `git reset --hard origin/dev` |
+| 写到一半要切分支              | `git stash` → 处理完 → `git stash pop`                                        |
+| 误删 commit / reset 后悔  | `git reflog` → `git checkout -b 恢复 <hash>`                                 |
+| 找到引入 bug 的 commit     | `git bisect start` → `bisect bad`/`good`                                   |
+| 搬指定 commit 到当前分支      | `git cherry-pick <hash>`                                                   |
+| 放弃正在进行的 merge         | `git merge --abort`                                                        |
+| 已 push 的错误 commit 要覆盖 | `git commit --amend` → `git push --force-with-lease`                       |
 
 > **最重要的急救原则**：不确定时**先建分支**（`git checkout -b 试试看`），分支里随便折腾，搞砸了删掉分支就好。
 

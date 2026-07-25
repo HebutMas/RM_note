@@ -1,0 +1,252 @@
+{
+  "main": {
+    "id": "221a73b848f0a8d9",
+    "type": "split",
+    "children": [
+      {
+        "id": "eed636f623f0f855",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c65834fc8a6996e3",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "440e9b3370a00479",
+    "type": "split",
+    "children": [
+      {
+        "id": "70c07b657a05ccdb",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f0d9f0823535c415",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "2922341520cbf747",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "3aa6b7675b96663e",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 294.5
+  },
+  "right": {
+    "id": "458aab4fd7f21f53",
+    "type": "split",
+    "children": [
+      {
+        "id": "ce9765982f057a29",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "df0e01b5263b0682",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "README.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "README 的反向链接列表"
+            }
+          },
+          {
+            "id": "07871ce6a251eb58",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "README.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "README 的出链列表"
+            }
+          },
+          {
+            "id": "26896400288d5455",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "7fe2af774c0a0453",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          },
+          {
+            "id": "7a1e8cd21f96adc8",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "README.md",
+                "followCursor": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "README 的大纲"
+            }
+          },
+          {
+            "id": "12d807417bfb36d6",
+            "type": "leaf",
+            "state": {
+              "type": "git-view",
+              "state": {},
+              "icon": "git-pull-request",
+              "title": "Source Control"
+            }
+          },
+          {
+            "id": "cf625cf768555d8b",
+            "type": "leaf",
+            "state": {
+              "type": "git-history-view",
+              "state": {},
+              "icon": "history",
+              "title": "History"
+            }
+          }
+        ],
+        "currentTab": 5
+      }
+    ],
+    "direction": "horizontal",
+    "width": 531.5
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:新建数据库": false,
+      "obsidian-git:Open Git source control": false
+    }
+  },
+  "active": "12d807417bfb36d6",
+  "lastOpenFiles": [
+    "rm-electric-knowledge-base/00_raw/hardware/BMI088_Datasheet.pdf",
+    "rm-electric-knowledge-base/00_raw/hardware/达妙科技DM-IMU-L1六轴IMU模块使用说明书V1.1.pdf",
+    "mas_vision/MAS_Vision_弹道解算与射击控制教程.md",
+    "mas_nav/RM_C程序员_C++速通指南.md",
+    "mas_nav/MAS_Nav_学习指南.md",
+    "mas_nav/MAS_Nav_决策与UDP通信.md",
+    "mas_electric-control/RM_LQR_lqr.py数学推导.md",
+    "mas_electric-control/RM_LQR_lqr.py使用文档.md",
+    "mas_electric-control/RM_Sentry_控制算法详解.md",
+    "mas_electric-control/RM_Sentry_功率控制详解.md",
+    "mas_electric-control/RM_Sentry_系统架构详解.md",
+    "mas_electric-control/RM_ThreadX_RTOS教程.md",
+    "mas_electric-control/RM_Utils_kfifo无锁队列详解.md",
+    "mas_electric-control/RM_CMake教程.md",
+    "mas_electric-control/RM_Chassis_偏置并联轮腿学习指南.md",
+    "mas_electric-control/RM_Chassis_底盘轮系运动学解算教程.md",
+    "mas_electric-control/RM_Chassis_串联轮腿数学推导与仿真.md",
+    "mas_electric-control/RM_Chassis_串联轮腿步兵下位机控制系统设计.md",
+    "mas_electric-control/RM_BSP与模块教程.md",
+    "RM_Git使用指南.md",
+    "README.md",
+    "02_code_twin/modules/MOTOR/motor_base.md",
+    "02_code_twin/apps/infantry3/single_board/chassis_func/chassis_func.md",
+    "02_code_twin/modules/MOTOR/DJI/motor_dji.md",
+    "02_code_twin/apps/sentry/chassis_board/chassis_func/chassis_func.md",
+    "02_code_twin/algorithm/lqr-state-feedback.md",
+    "02_code_twin/algorithm/pid-optimization.md",
+    "00_raw/hardware/BMI088_Datasheet.pdf",
+    "01_extracted/hardware/assets/Pasted image 20260724212855.png",
+    "01_extracted/hardware/assets/Pasted image 20260724205536.png",
+    "01_extracted/hardware/assets/fc-board-axes.png",
+    "01_extracted/hardware/assets/gnss-module-axes.png",
+    "01_extracted/hardware/assets/fc-board-axes.jpg",
+    "01_extracted/hardware/assets/gnss-module-axes.jpg",
+    "Pasted image 20260724214628.png",
+    "Pasted image 20260724213541.png",
+    "Pasted image 20260724212855.png",
+    "01_extracted/hardware/assets/bmi088-axis-annotated.jpg",
+    "02_code_twin/algorithm",
+    "clean_v1.py",
+    "01_extracted/cmake/fix_v1.py",
+    "01_extracted/cmake/fix_01.py",
+    "03_moc/fix_note.py",
+    "02_code_twin/cmake",
+    "01_extracted/hardware/assets",
+    "_historical/03_moc/sentry"
+  ]
+}
