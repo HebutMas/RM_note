@@ -775,13 +775,13 @@ git cherry-pick abc1234^..def5678          # 搬一段连续的 commit（含 sta
 
 ### 战队代码和文档放在哪
 
-| 内容 | 位置 | 说明 |
-|:-----|:-----|:-----|
-| 电控代码 | `github.com/HebutMas/mas_embedded_threadx` | 主仓库，含 dev/main 分支 |
-| 电控知识库 | `github.com/HebutMas/RM_note` → `rm-electric-knowledge-base/` | 代码解析、踩坑记录、环境配置 |
-| 视觉代码 | `github.com/HebutMas/mas_vision` | 视觉算法和模型 |
-| 导航代码 | `github.com/HebutMas/mas_nav` | 导航相关 |
-| Git 使用指南 | `RM_note` 仓库根目录 | 本文档 |
+| 内容       | 位置                                                            | 说明                |
+| :------- | :------------------------------------------------------------ | :---------------- |
+| 电控代码     | `github.com/HebutMas/mas_embedded_threadx`                    | 主仓库，含 dev/main 分支 |
+| 电控知识库    | `github.com/HebutMas/RM_note` → `rm-electric-knowledge-base/` | 代码解析、踩坑记录、环境配置    |
+| 视觉代码     | `github.com/HebutMas/mas_vision`                              | 视觉算法和模型           |
+| 导航代码     | `github.com/HebutMas/mas_nav`                                 | 导航相关              |
+| Git 使用指南 | `RM_note` 仓库根目录                                               | 本文档               |
 
 ### Wiki：内部知识库
 

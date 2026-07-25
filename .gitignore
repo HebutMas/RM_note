@@ -1,18 +1,13 @@
-# 不上传的原始资料
+# ── Obsidian 动态文件（每次打开都变） ──
+.obsidian/workspace.json
+.obsidian/graph.json
+
+# ── Obsidian 插件二进制（可通过社区插件市场重装） ──
+.obsidian/plugins/obsidian-git/
+
+# ── 不上传的原始资料 ──
 rm-electric-knowledge-base/00_raw/reference-code/
 rm-electric-knowledge-base/00_raw/reference-note/
 rm-electric-knowledge-base/00_raw/Obsidian-1.12.7.exe
-
-# 未审核的电机资料
 rm-electric-knowledge-base/00_raw/motors/ZDT_STEPMOTOR/
-
-# 垃圾文件
 rm-electric-knowledge-base/00_raw/垃圾桶/
-
-# Obsidian 动态文件 (每次打开都变)
-rm-electric-knowledge-base/.obsidian/workspace.json
-rm-electric-knowledge-base/.obsidian/graph.json
-rm-electric-knowledge-base/.obsidian/plugins/
-
-/.obsidian/workspace.json
-/.obsidian/app.json
