@@ -10,8 +10,7 @@ static bool g_initialized = false;            // 幂等标志
 static uint8_t g_silent_error = 0;            // 静默故障标志
 ```
 
-`g_device_list` 是链表头指针，初始 `NULL` 表示空链表。`g_initialized` 防止重复初始化。链表操作见 [[01_extracted/algorithm/data-structure-linked-list]]。
-
+`g_device_list` 是链表头指针，初始 `NULL` 表示空链表。
 ## 检测任务（10ms 周期）
 
 ```
@@ -97,7 +96,7 @@ dev->last_time  = BSP_DWT_GetTimeline_ms();
 // 头插链表
 ```
 
-内存分配 + 头插链表的完整模式见 [[01_extracted/algorithm/data-structure-linked-list#注册 = 分配 + 填充 + 头插]]。`BSP_MEM_ALLOC_WAIT` 底层是 `tx_byte_allocate`，从 `Robot_Init()` 创建的 20KB 内存池分配。返回 `NULL` 的含义见 [[01_extracted/algorithm/data-structure-linked-list#NULL 是什么]]。
+内存分配 + 头插链表的完整模式见 [[01_extracted/algorithm/data-structure-linked-list#注册 = 分配 + 填充 + 头插]]。`BSP_MEM_ALLOC_WAIT` 底层是 `tx_byte_allocate`，从 `Robot_Init()` 创建的 20KB 内存池分配。
 
 ## Module_Offline_device_update()
 
