@@ -19,7 +19,7 @@ get_filename_component(MAS_ROOT ${CMAKE_CURRENT_LIST_DIR}/.. ABSOLUTE)
 ```
 
 `CMAKE_CURRENT_LIST_DIR` 指向 `cmake/` 目录，`/..` 回到仓库根目录，`ABSOLUTE` 确保是绝对路径。因为 `board_common.cmake` 是被 `include` 进来的，`CMAKE_CURRENT_SOURCE_DIR` 仍然是板目录，不能用相对路径。
-
+ - [[cmake-basic-syntax#get_filename_component - 提取路径组件]]
 ### 基础设置
 
 ```cmake
@@ -42,7 +42,7 @@ configure_file(${MAS_ROOT}/apps/module_config.h.in  ${_generated_dir}/module_con
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 ```
-
+有关configure_file函数和.h.in的知识详见[[cmake-basic-syntax#configure_file - 模板替换生成文件]]
 ### 创建目标
 
 ```cmake
@@ -93,7 +93,7 @@ target_include_directories(cherryusb PUBLIC
 target_compile_options(cherryusb PRIVATE -O3 -ffast-math -fno-math-errno)  
 target_link_libraries(cherryusb PUBLIC stm32cubemx azrtos::threadx utils)
 ```
-→ [[01_extracted/cmake/gcc-cmake-build#target_compile_options - 编译器选项]]
+注意此处进行了cherryusb的编译优化→ [[01_extracted/cmake/gcc-cmake-build#target_compile_options - 编译器选项]]
 ### CMSIS-DSP（统一编译，链接器裁剪）
 
 ```cmake
