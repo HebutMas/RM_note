@@ -1,10 +1,6 @@
-# ── Obsidian 动态文件（每次打开都变） ──
+# ── Obsidian 动态文件（每次打开都变，不应跟踪） ──
 .obsidian/workspace.json
 .obsidian/graph.json
-
-# ── Obsidian 插件二进制（可通过社区插件市场重装） ──
-.obsidian/plugins/obsidian-git/
-
 # ── 不上传的原始资料 ──
 rm-electric-knowledge-base/00_raw/reference-code/
 rm-electric-knowledge-base/00_raw/reference-note/
