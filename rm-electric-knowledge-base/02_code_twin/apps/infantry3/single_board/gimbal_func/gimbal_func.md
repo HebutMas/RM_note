@@ -13,7 +13,9 @@
 | 电机 | 型号 | CAN | 角度反馈 | 速度反馈 | `feedback_reverse_flag` | `motor_reverse_flag` | 控制方式 |
 |------|------|-----|---------|---------|------|------|--------|
 | yaw | GM6020 | CAN1 ID=1 | `ins->YawTotalAngle_rad` | `bmi088_dev->gyro[2]` | 0 | 0 | LQR 角度环 |
-| pitch | DM4310 | CAN2 tx=0x01 rx=0xF1 | `ins->euler_rad[1]` | `bmi088_dev->gyro[0]` | **1** | 0 | LQR 角度环 |
+| pitch | DM4310 | CAN2 tx=0x01 rx=0xF1 | `ins->euler_rad[1]` | `bmi088_dev->gyro[0]` | **1** | **1** | LQR 角度环 |
+
+> ⚠️ 2026-08-26 实测更正：pitch 的 `motor_reverse_flag` 由 0 → **1**（migratef1x 已加上）。实测依据：遥控上推左摇杆 → `gimbal_cmd->pitch` 增加 → **云台低头**；若不取反 ref，上推会变成抬头。
 
 两个电机的 `angle_feedback_source = 1`、`speed_feedback_source = 1`，即角度和速度都走外部反馈（INS + BMI088），不用电机自身编码器。
 
@@ -44,23 +46,23 @@ yaw 电机用 `gyro[2]`（chip Z = yaw），pitch 电机用 `gyro[0]`（chip X =
 
 ---
 
-### pitch 的 `feedback_reverse_flag = 1`：把反馈掰到电机轴
+### pitch 的两个取反：feedback 掰反馈、ref 掰指令
 
 pitch 电机（DM4310）的安装方向与 INS pitch 轴方向相反：
 
 ```
-INS 坐标系（前 X、左 Y、上 Z）—— **左手系**：
-    pitch 正方向 = 低头（枪口向下）
-    左手定则：拇指朝 Y 正方向（左），四指弯曲方向为正
+INS 坐标系（前 X、左 Y、上 Z）：
+    pitch 正方向 = 低头（重力补偿后得到）
+    （INS 欧拉角 euler_rad[1] 在低头时增大——实测下因为俯仰重力关系"向下为增大"）
 
 DM4310 电机坐标系：
-    电机正方向 = 抬头（枪口向上）
-    （电机安装方向与 INS pitch 轴相反）
+    电机 total_angle 正方向 = 抬头（枪口向上）
+    （电机编码器向上转时 total_angle 增大——实测）
+
+→ 因此：电机的"抬头" 对应 INS 的 "低头减小"，电机轴与 INS pitch 轴相反。
 ```
 
-如果不做任何处理，INS 反馈的 pitch 角度增大（低头），但电机认为自己在减小 → 正反馈 → 发散。
-
-`feedback_reverse_flag = 1` 的作用是在 `CalculateLQROutput` 中把外部反馈取反：
+`feedback_reverse_flag = 1` 的作用是在 `CalculatePIDOutput` / `CalculateLQROutput` 中把外部反馈取反：
 
 ```c
 // motor_dji.c / motor_damiao.c 中
@@ -69,28 +71,29 @@ if (feedback_reverse_flag == 1)            // pitch 电机 = 1
     pid_measure *= -1;                     // ← 反转，对齐电机轴
 ```
 
-角度反馈和速度反馈都走这条路径，都被取反。**效果是把 INS 坐标系掰到电机坐标系**，LQR 在电机坐标系内闭环。
-
----
-
-### 为什么不对 ref 取反
-
-注意 pitch 电机的 `motor_reverse_flag` 没有设置（默认 0），即 ref 不取反。这与底盘电机不同（底盘的 `motor_reverse_flag = [0,0,1,1]` 是为了处理左右对称安装，详见 [[02_code_twin/modules/MOTOR/motor_base#motor_reverse_flag -- 参考端取反]]）。
-
-原因在于 **ref 的符号在更上层就已经对了**。`gimbal_func` 中：
+**同时 `motor_reverse_flag = 1` 也要取反 ref**（migratef1x 2026-08-26 实测后确认）：
 
 ```c
-Motor_DM_SetRef(pitch_motor, gimbal_cmd->pitch * DEGREE_2_RAD);
+// motor_dji.c / motor_damiao.c 中
+pid_ref = motor->base.controller.ref;
+if (motor->base.setting.motor_reverse_flag == 1) pid_ref *= -1;   // 现在的 pitch 电机 = 1
 ```
 
-`gimbal_cmd->pitch` 来自遥控器/视觉输入。遥控器往上推 → pitch ref 值增加。pitch 轴向上为正（抬头 = 电机正方向），且 feedback 已取反对齐到电机坐标系，所以 ref 符号在更上层已经正确，不需要 `motor_reverse_flag`。
+原因：`gimbal_cmd->pitch` 来自遥控器。**实测后确定：遥控器往上推 → pitch ref 值增加 → 云台低头**（即"上推=低头"）。而电机轴正方向是"抬头"（total_angle 向上增大）。所以只有两个取反都加，才能让：
+
+- feedback 取反 → 把 INS 的"低头为正"掰成"抬头为正"（对齐电机轴正向）；
+- ref 取反 → 把遥控的"上推=低头"掰成"上推时电机目标角减小"（对齐电机轴负向）。
+
+**两个取反必须同时成立**，缺少任何一个，LQR 都变成正反馈发散。
+
+> ⚠️ 早期笔记曾写 `motor_reverse_flag=0`，那是旧状态。migratef1x 已实测改为 `=1`。**注意**：此处与底盘不同——底盘 `[1,1,0,0]` 是为了处理左右对称安装，见 [[02_code_twin/modules/MOTOR/motor_base#motor_reverse_flag -- 参考端取反]]。
 
 pitch 电机的完整配置：
 
 | flag | 值 | 含义 |
 |------|-----|------|
-| `feedback_reverse_flag` | **1** | INS 和电机方向相反，需要取反反馈 |
-| `motor_reverse_flag` | 0 | 上层已处理符号，ref 不取反 |
+| `feedback_reverse_flag` | **1** | INS 和电机方向相反，把反馈取反到电机轴 |
+| `motor_reverse_flag` | **1** | 遥控"上推=低头"，把 ref 取反到电机轴 |
 | `angle_feedback_source` | 1 | 用 INS 欧拉角 |
 | `speed_feedback_source` | 1 | 用 BMI088 陀螺仪 |
 

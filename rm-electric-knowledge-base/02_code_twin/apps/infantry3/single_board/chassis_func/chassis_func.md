@@ -14,10 +14,13 @@
 
 | 电机     | 型号    | CAN  | tx_id | `motor_reverse_flag` | 角色    | 减速比  |
 | ------ | ----- | ---- | ----- | -------------------- | ----- | ---- |
-| [0] LF | M3508 | CAN1 | 1     | 0                    | DRIVE | 16:1 |
-| [1] LB | M3508 | CAN1 | 2     | 0                    | DRIVE | 16:1 |
-| [2] RB | M3508 | CAN1 | 3     | **1**                | DRIVE | 16:1 |
-| [3] RF | M3508 | CAN1 | 4     | **1**                | DRIVE | 16:1 |
+| [0] LF | M3508 | CAN1 | 4     | **1**                | DRIVE | 16:1 |
+| [1] LB | M3508 | CAN1 | 1     | **1**                | DRIVE | 16:1 |
+| [2] RB | M3508 | CAN1 | 2     | 0                    | DRIVE | 16:1 |
+| [3] RF | M3508 | CAN1 | 3     | 0                    | DRIVE | 16:1 |
+
+> ⚠️ 2026-08-26 实测更正：原笔记的 `tx=[1,2,3,4]` / `reverse=[0,0,1,1]`（学长版）在本车上实测与物理轮不对应。本车实测 CAN 槽位为 **`[4,1,2,3]`**（左前=4, 左后=1, 右后=2, 右前=3），左侧两轮编码器反装 → `motor_reverse_flag=[1,1,0,0]`。**以实测为准，不要照抄 old 值。**
+> 含义：若换车/换接线，必须重测轮位与编码方向，表内 tx/reverse 是不可移植的硬件台账。
 
 全部注册到功率控制（DRIVE 角色），功率上限 120W。
 
@@ -56,9 +59,9 @@ static const Chassis_Diff_Config_s chassis_diff_config = {
 
 ## 电机取反
 
-### 为什么 `motor_reverse_flag` 是 `[0, 0, 1, 1]`
+### 为什么本车 `motor_reverse_flag` 是 `[1, 1, 0, 0]`
 
-麦轮底盘的 4 个电机左右对称安装，左侧和右侧电机的安装方向相反。
+麦轮底盘的 4 个电机左右对称安装，左右两侧电机的编码器安装方向相反（本车**左侧**两轮反装）。
 
 **如果不加取反，同样给正速度指令时：**
 
@@ -71,9 +74,7 @@ static const Chassis_Diff_Config_s chassis_diff_config = {
      └───────────┘
 ```
 
-左侧电机正转 = 顺时针，右侧电机正转 = 逆时针 → 左右轮子反转，底盘不会前进。
-
-**加上 `reverse=[0,0,1,1]` 后：**
+**加上 `reverse=[1,1,0,0]`（左侧取反）后：**
 
 ```
          Front
@@ -85,9 +86,19 @@ static const Chassis_Diff_Config_s chassis_diff_config = {
          Back
 ```
 
-右侧电机的 ref 被取反，正速度指令变为逆时针 → 实际转动方向与左侧一致，四轮同向旋转 → 前进。
+左侧电机的 ref 被取反，正速度指令到电机后实际转动与右侧一致，四轮同向旋转 → 前进。
 
 `motor_reverse_flag` 在 `CalculateLQROutput()` 中将 ref 取反，使运动学层不需要关心单个电机的安装方向。完整取反机制见 [[02_code_twin/modules/MOTOR/motor_base#坐标系与取反机制]]。
+
+### ⚠️ 槽位/取反的数学本质（换车必读）
+
+上方表格的 `tx / reverse` 是**这台车的硬件台账**，不可移植。换车换接线后必须重测。重测判定依据：
+
+- 麦轮解算按槽位 0=左前(LF) 1=左后(LB) 2=右后(RB) 3=右前(RF) 展开，四个公式为：
+  `ws[0]=+vx−vy−ω·L,  ws[1]=+vx+vy−ω·L,  ws[2]=+vx−vy+ω·L,  ws[3]=+vx+vy+ω·L`
+- **对角换槽位（0↔2、1↔3）只会让 vw 项反号，vx/vy 不受影响**（vx/vy 四行列对角对称，vw 列对角反对称）。因此直行/横移测不出槽位反了，只有自旋/跟随的方向会暴露。
+- 若槽位对调后想让旋转也对，则跟随 PID 输入必须同步取反（`PID(−offset)` ↔ 槽位反 ↔ `PID(+offset)` 三者乘积为 +1 才自洽）。
+- 遥控各通道符号（vx=ch2 上推正, vy=−ch1 右推正, pitch=ch3 上推低头, yaw=ch4 左推偏航增）经实测与代码一致，无需翻转。
 
 ---
 
@@ -104,7 +115,7 @@ static const Chassis_Diff_Config_s chassis_diff_config = {
 | `chassis_zero_force` | — | 全部 Stop |
 | `chassis_rotate` | 固定 3 | 正向自旋 |
 | `chassis_rotate_reverse` | 固定 -8 | 反向自旋 |
-| `chassis_follow_gimbal_yaw` | 跟随 PID 输出 | 跟随云台 yaw |
+| `chassis_follow_gimbal_yaw` | 跟随 PID 输出 | 跟随云台 yaw（**输入取负：`PIDCalculate(&pid, −offset_angle, 0)`**，与槽位取反配套，见上文） |
 
 ### 坐标变换
 
